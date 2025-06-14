@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, BookOpen, Users, Award } from 'lucide-react';
+import SampleCertificate from './SampleCertificate';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -58,38 +59,14 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Column - Visual */}
+          {/* Right Column - Sample Certificate */}
           <div className="relative lg:pl-8">
             <div className="relative z-10 float-animation">
-              <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md mx-auto">
-                <div className="mb-6">
-                  <div className="w-full h-48 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl mb-4 flex items-center justify-center">
-                    <Play className="h-12 w-12 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Renewable Energy Basics</h3>
-                  <p className="text-gray-600 text-sm">Learn about solar, wind, and other renewable energy sources</p>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="text-green-600 font-medium">80%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full w-4/5"></div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Users className="h-3 w-3 mr-1" />
-                      1,234 learners
-                    </div>
-                    <div className="flex items-center text-xs text-green-600">
-                      <Award className="h-3 w-3 mr-1" />
-                      Certificate available
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-4 text-center">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Earn Your Certificate</h3>
+                <p className="text-sm text-gray-600">Complete courses and showcase your sustainability knowledge</p>
               </div>
+              <SampleCertificate />
             </div>
             
             {/* Background decoration */}
