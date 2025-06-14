@@ -1,11 +1,36 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Leaf, Menu, User, BookOpen, GraduationCap } from 'lucide-react';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsOpen(false);
+    navigate('/');
+  };
 
   const navigationItems = [
     { name: 'Home', href: '#home' },
@@ -13,6 +38,11 @@ const Header = () => {
     { name: 'About', href: '#about' },
     { name: 'Contact', href: '#contact' },
   ];
+
+  const handleLogin = () => {
+    setIsOpen(false);
+    navigate('/auth');
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-green-100">
@@ -41,14 +71,25 @@ const Header = () => {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50">
-              <User className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-              <GraduationCap className="h-4 w-4 mr-2" />
-              Start Learning
-            </Button>
+            {session ? (
+                <>
+                  <span className="text-sm font-medium text-gray-700 hidden sm:block">{session.user.email}</span>
+                  <Button variant="outline" size="sm" onClick={handleLogout} className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700">
+                    Logout
+                  </Button>
+                </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50" onClick={handleLogin}>
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleLogin}>
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Start Learning
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -71,14 +112,25 @@ const Header = () => {
                   </a>
                 ))}
                 <div className="pt-4 border-t border-gray-200">
-                  <Button variant="ghost" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50 mb-2">
-                    <User className="h-4 w-4 mr-2" />
-                    Login
-                  </Button>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    <GraduationCap className="h-4 w-4 mr-2" />
-                    Start Learning
-                  </Button>
+                  {session ? (
+                      <>
+                        <div className="px-4 py-2 text-sm text-gray-600 truncate">{session.user.email}</div>
+                        <Button variant="ghost" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50" onClick={handleLogout}>
+                          Logout
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50 mb-2" onClick={handleLogin}>
+                          <User className="h-4 w-4 mr-2" />
+                          Login
+                        </Button>
+                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleLogin}>
+                          <GraduationCap className="h-4 w-4 mr-2" />
+                          Start Learning
+                        </Button>
+                      </>
+                  )}
                 </div>
               </div>
             </SheetContent>
