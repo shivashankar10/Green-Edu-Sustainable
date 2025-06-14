@@ -1,0 +1,95 @@
+
+import { Button } from '@/components/ui/button';
+import { Play, BookOpen, Users, Award } from 'lucide-react';
+
+const HeroSection = () => {
+  return (
+    <section id="home" className="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-blue-50 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column - Content */}
+          <div className="animate-fade-in">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              Learn{' '}
+              <span className="gradient-text">Sustainability</span>
+              <br />
+              Shape the Future
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              Empower yourself with knowledge about environmental sustainability through our interactive online learning platform. Join thousands of learners committed to creating a greener tomorrow.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg">
+                <Play className="h-5 w-5 mr-2" />
+                Start Learning Now
+              </Button>
+              <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg">
+                <BookOpen className="h-5 w-5 mr-2" />
+                Explore Courses
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">500+</div>
+                <div className="text-sm text-gray-600">Video Lessons</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">10k+</div>
+                <div className="text-sm text-gray-600">Active Learners</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">5k+</div>
+                <div className="text-sm text-gray-600">Certificates Issued</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Visual */}
+          <div className="relative lg:pl-8">
+            <div className="relative z-10 float-animation">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md mx-auto">
+                <div className="mb-6">
+                  <div className="w-full h-48 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl mb-4 flex items-center justify-center">
+                    <Play className="h-12 w-12 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">Renewable Energy Basics</h3>
+                  <p className="text-gray-600 text-sm">Learn about solar, wind, and other renewable energy sources</p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Progress</span>
+                    <span className="text-green-600 font-medium">80%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-600 h-2 rounded-full w-4/5"></div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Users className="h-3 w-3 mr-1" />
+                      1,234 learners
+                    </div>
+                    <div className="flex items-center text-xs text-green-600">
+                      <Award className="h-3 w-3 mr-1" />
+                      Certificate available
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Background decoration */}
+            <div className="absolute top-4 right-4 w-32 h-32 bg-green-200 rounded-full opacity-20 -z-10"></div>
+            <div className="absolute bottom-8 left-8 w-24 h-24 bg-blue-200 rounded-full opacity-20 -z-10"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;
