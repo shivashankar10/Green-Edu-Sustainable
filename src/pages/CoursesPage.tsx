@@ -5,24 +5,35 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Play, Clock, Users, Award, Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Play, Clock, Users, Award, Star, Search } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
-const CoursesSection = () => {
+const CoursesPage = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
 
   useEffect(() => {
-    fetchFeaturedCourses();
+    fetchCourses();
   }, []);
 
-  const fetchFeaturedCourses = async () => {
+  useEffect(() => {
+    filterCourses();
+  }, [courses, searchTerm, categoryFilter, levelFilter]);
+
+  const fetchCourses = async () => {
     try {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('is_featured', true)
-        .limit(6);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setCourses(data || []);
@@ -31,6 +42,27 @@ const CoursesSection = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterCourses = () => {
+    let filtered = courses;
+
+    if (searchTerm) {
+      filtered = filtered.filter(course =>
+        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(course => course.category === categoryFilter);
+    }
+
+    if (levelFilter !== 'all') {
+      filtered = filtered.filter(course => course.level === levelFilter);
+    }
+
+    setFilteredCourses(filtered);
   };
 
   const getLevelColor = (level: string) => {
@@ -46,27 +78,65 @@ const CoursesSection = () => {
     }
   };
 
-  return (
-    <section id="courses" className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Featured <span className="gradient-text">Sustainability Courses</span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Dive deep into environmental sustainability with our comprehensive video lessons, 
-            interactive quizzes, and earn certificates to showcase your knowledge.
-          </p>
-        </div>
+  const categories = [...new Set(courses.map(course => course.category))].filter(Boolean);
+  const levels = [...new Set(courses.map(course => course.level))].filter(Boolean);
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div>Loading courses...</div>
+  return (
+    <div className="min-h-screen bg-white">
+      <Header />
+      <main className="pt-20 pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold mb-4">
+              All <span className="gradient-text">Courses</span>
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Explore our complete library of sustainability courses
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {courses.map((course) => (
+
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={levelFilter} onValueChange={setLevelFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Levels</SelectItem>
+                {levels.map(level => (
+                  <SelectItem key={level} value={level}>{level}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div>Loading courses...</div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredCourses.map((course) => (
                 <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white border-0 shadow-lg cursor-pointer" onClick={() => navigate(`/course/${course.id}`)}>
                   <CardHeader className="p-0">
                     <div className="h-48 bg-gradient-to-br from-green-400 to-emerald-600 rounded-t-lg flex items-center justify-center relative overflow-hidden">
@@ -83,7 +153,7 @@ const CoursesSection = () => {
                         </Badge>
                         <div className="flex items-center text-sm text-gray-600">
                           <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                          {course.rating || 4.8}
+                          {course.rating}
                         </div>
                       </div>
                       <CardTitle className="text-xl mb-2 group-hover:text-green-600 transition-colors">
@@ -121,17 +191,18 @@ const CoursesSection = () => {
                 </Card>
               ))}
             </div>
+          )}
 
-            <div className="text-center">
-              <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50" onClick={() => navigate('/courses')}>
-                View All Courses
-              </Button>
+          {!loading && filteredCourses.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No courses found matching your criteria.</p>
             </div>
-          </>
-        )}
-      </div>
-    </section>
+          )}
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 };
 
-export default CoursesSection;
+export default CoursesPage;

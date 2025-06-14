@@ -1,8 +1,18 @@
 
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, BookOpen, Users, Award } from 'lucide-react';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleExploreClick = () => {
+    const coursesElement = document.querySelector('#courses');
+    if (coursesElement) {
+      coursesElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="home" className="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-blue-50 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,11 +31,11 @@ const HeroSection = () => {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg" onClick={() => navigate('/courses')}>
                 <Play className="h-5 w-5 mr-2" />
                 Start Learning Now
               </Button>
-              <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg">
+              <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg" onClick={handleExploreClick}>
                 <BookOpen className="h-5 w-5 mr-2" />
                 Explore Courses
               </Button>
