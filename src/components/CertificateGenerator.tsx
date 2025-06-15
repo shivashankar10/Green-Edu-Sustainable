@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Download, QrCode } from 'lucide-react';
 import SampleCertificate from './SampleCertificate';
 import { useCertificateVerification } from '@/hooks/useCertificateVerification';
-import QRCode from 'qrcode';
 
 interface CertificateGeneratorProps {
   courseId: string;
@@ -32,17 +31,22 @@ const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, co
     if (certData) {
       setCertificateData(certData);
       
-      // Generate QR code URL
-      const verificationUrl = `${window.location.origin}/verify-certificate?code=${certData.certificate_code}`;
-      const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        width: 200,
-        margin: 2,
-        color: {
-          dark: '#16a34a',
-          light: '#ffffff'
-        }
-      });
-      setQrCodeUrl(qrDataUrl);
+      // Generate QR code URL using dynamic import
+      try {
+        const QRCode = await import('qrcode');
+        const verificationUrl = `${window.location.origin}/verify-certificate?code=${certData.certificate_code}`;
+        const qrDataUrl = await QRCode.default.toDataURL(verificationUrl, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#16a34a',
+            light: '#ffffff'
+          }
+        });
+        setQrCodeUrl(qrDataUrl);
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
     }
   };
 

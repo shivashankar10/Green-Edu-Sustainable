@@ -1,363 +1,255 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle, XCircle, Timer, Award } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, X, Award, RotateCcw, Clock } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 
-interface QuizQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correct_answer: number;
-}
-
-interface QuizComponentProps {
-  courseId: string;
-  onClose: () => void;
-}
-
-const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(true);
+export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string; quiz: any; onComplete: (score: number) => void }) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+  const [timeLeft, setTimeLeft] = useState(quiz.time_limit || 600); // Default 10 minutes
+  const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState(0);
-  const [courseDetails, setCourseDetails] = useState<any>(null);
-  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
-  const [isTimerActive, setIsTimerActive] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchQuestions();
-    fetchCourseDetails();
-  }, [courseId]);
-
+  const totalQuestions = quiz.questions.length;
+  const currentQuestion = quiz.questions[currentQuestionIndex];
+  
   // Timer effect
   useEffect(() => {
-    if (isTimerActive && timeLeft > 0 && !showResults) {
-      timerRef.current = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !showResults) {
-      // Auto move to next question when timer expires
-      handleNext();
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [timeLeft, isTimerActive, showResults]);
-
-  // Start timer when component loads and questions are available
-  useEffect(() => {
-    if (questions.length > 0 && !showResults) {
-      setIsTimerActive(true);
-      setTimeLeft(15);
-    }
-  }, [questions, currentQuestion, showResults]);
-
-  const fetchCourseDetails = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('title, lessons, duration')
-        .eq('id', courseId)
-        .single();
-
-      if (error) throw error;
-      setCourseDetails(data);
-    } catch (error) {
-      console.error('Error fetching course details:', error);
-    }
-  };
-
-  const fetchQuestions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('quiz_questions')
-        .select('*')
-        .eq('course_id', courseId);
-
-      if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        toast({
-          title: "No quiz available",
-          description: "This course doesn't have a quiz yet.",
-          variant: "destructive"
-        });
-        onClose();
-        return;
-      }
-
-      // Transform the data to match our interface
-      const transformedQuestions: QuizQuestion[] = data.map(item => ({
-        id: item.id,
-        question: item.question,
-        options: Array.isArray(item.options) ? item.options as string[] : [],
-        correct_answer: item.correct_answer
-      }));
-
-      setQuestions(transformedQuestions);
-      setSelectedAnswers(new Array(transformedQuestions.length).fill(-1));
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load quiz questions.",
-        variant: "destructive"
+    if (completed || timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          if (!completed) {
+            handleSubmitQuiz();
+          }
+          return 0;
+        }
+        return prev - 1;
       });
-    } finally {
-      setLoading(false);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft, completed]);
+  
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  
+  const handleAnswerSelect = (answer: string) => {
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [currentQuestionIndex]: answer
+    });
+  };
+  
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
-
-  const handleAnswerSelect = (answerIndex: number) => {
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestion] = answerIndex;
-    setSelectedAnswers(newAnswers);
-  };
-
-  const handleNext = () => {
-    // Clear the timer
-    setIsTimerActive(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setTimeLeft(15); // Reset timer for next question
-      setIsTimerActive(true);
-    } else {
-      submitQuiz();
+  
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
-
-  const submitQuiz = async () => {
-    // Stop the timer
-    setIsTimerActive(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
+  
+  const calculateScore = () => {
     let correctAnswers = 0;
-    questions.forEach((question, index) => {
+    
+    quiz.questions.forEach((question: any, index: number) => {
       if (selectedAnswers[index] === question.correct_answer) {
         correctAnswers++;
       }
     });
-
-    const finalScore = Math.round((correctAnswers / questions.length) * 100);
-    setScore(finalScore);
-
-    try {
-      const { error } = await supabase
-        .from('quiz_attempts')
-        .insert({
-          user_id: user?.id,
-          course_id: courseId,
-          score: finalScore,
-          total_questions: questions.length,
-          answers: selectedAnswers
-        });
-
-      if (error) throw error;
-
-      // Update course enrollment progress to 100% if score is 80% or higher
-      if (finalScore >= 80) {
-        await supabase
-          .from('course_enrollments')
-          .update({ 
-            progress: 100,
-            completed: true 
-          })
-          .eq('user_id', user?.id)
-          .eq('course_id', courseId);
-      }
-
+    
+    return Math.round((correctAnswers / totalQuestions) * 100);
+  };
+  
+  const handleSubmitQuiz = () => {
+    // Check if all questions are answered
+    if (Object.keys(selectedAnswers).length < totalQuestions) {
       toast({
-        title: "Quiz completed!",
-        description: `You scored ${finalScore}%. ${finalScore >= 80 ? 'Congratulations! You can now download your certificate.' : 'You need 80% or higher to get a certificate.'}`
+        title: "Warning",
+        description: "You haven't answered all questions. Are you sure you want to submit?",
+        variant: "destructive",
       });
-    } catch (error) {
-      console.error('Error saving quiz results:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save quiz results.",
-        variant: "destructive"
-      });
+      return;
     }
-
+    
+    const finalScore = calculateScore();
+    setScore(finalScore);
+    setCompleted(true);
     setShowResults(true);
+    
+    // Call the onComplete callback with the score
+    onComplete(finalScore);
   };
-
-  const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers(new Array(questions.length).fill(-1));
-    setShowResults(false);
-    setScore(0);
-    setTimeLeft(15);
-    setIsTimerActive(true);
+  
+  const getProgressColor = (score: number) => {
+    if (score >= 80) return "bg-green-500";
+    if (score >= 60) return "bg-yellow-500";
+    return "bg-red-500";
   };
-
-  // Extract hours from duration string (e.g., "4 hours" -> 4)
-  const getHoursFromDuration = (duration: string) => {
-    const match = duration?.match(/(\d+)\s*hours?/i);
-    return match ? parseInt(match[1]) : 4;
-  };
-
-  if (loading) {
-    return (
-      <Card className="mb-8">
-        <CardContent className="p-8 text-center">
-          <div>Loading quiz...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  
   if (showResults) {
     return (
-      <Card className="mb-8">
+      <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Award className="h-5 w-5 mr-2" />
-            Quiz Results
-          </CardTitle>
+          <CardTitle className="text-2xl">Quiz Results</CardTitle>
+          <CardDescription>
+            You scored {score}% on this quiz
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center">
-            <div className={`text-4xl font-bold mb-2 ${score >= 80 ? 'text-green-600' : 'text-orange-600'}`}>
-              {score}%
-            </div>
-            <p className="text-gray-600">
-              You answered {questions.filter((_, index) => selectedAnswers[index] === questions[index].correct_answer).length} out of {questions.length} questions correctly.
-            </p>
-            {score >= 80 && (
-              <p className="text-green-600 font-semibold mt-2">
-                🎉 Congratulations! You passed the quiz and earned a certificate!
-              </p>
+          <div className="flex justify-center">
+            {score >= 80 ? (
+              <div className="text-center">
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-2" />
+                <p className="text-xl font-bold text-green-700">Congratulations!</p>
+                <p className="text-gray-600">You passed the quiz</p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <XCircle className="h-16 w-16 text-red-500 mx-auto mb-2" />
+                <p className="text-xl font-bold text-red-700">Not quite there</p>
+                <p className="text-gray-600">You need 80% to pass</p>
+              </div>
             )}
           </div>
-
-          {/* Certificate Generation */}
-          {score >= 80 && courseDetails && (
-            <CertificateGenerator
-              courseTitle={courseDetails.title}
-              lessons={courseDetails.lessons || 12}
-              hours={getHoursFromDuration(courseDetails.duration)}
-              score={score}
-              completed={true}
-            />
-          )}
-
-          <div className="flex space-x-4">
-            <Button onClick={resetQuiz} variant="outline" className="flex-1">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Retake Quiz
-            </Button>
-            <Button onClick={onClose} className="bg-green-600 hover:bg-green-700 flex-1">
-              Close Quiz
-            </Button>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Your score</span>
+              <span className="font-medium">{score}%</span>
+            </div>
+            <Progress value={score} className={getProgressColor(score)} />
+          </div>
+          
+          <div className="space-y-4">
+            <h3 className="font-medium">Question Summary:</h3>
+            {quiz.questions.map((question: any, index: number) => (
+              <div key={index} className="border rounded-md p-3">
+                <p className="font-medium">{question.question}</p>
+                <div className="flex items-center mt-2">
+                  <div className="mr-2">
+                    {selectedAnswers[index] === question.correct_answer ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm">Your answer: <span className={selectedAnswers[index] === question.correct_answer ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                      {selectedAnswers[index] || "Not answered"}
+                    </span></p>
+                    {selectedAnswers[index] !== question.correct_answer && (
+                      <p className="text-sm">Correct answer: <span className="text-green-600 font-medium">{question.correct_answer}</span></p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
+        <CardFooter className="flex justify-center">
+          <Button 
+            onClick={() => setShowResults(false)}
+            variant="outline"
+            className="mr-2"
+          >
+            Review Quiz
+          </Button>
+          <Button onClick={() => window.location.reload()}>
+            Restart Quiz
+          </Button>
+        </CardFooter>
       </Card>
     );
   }
-
-  const currentQ = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-
+  
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Course Quiz</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {/* Timer Display */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span className={`font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-gray-700'}`}>
-              {timeLeft}s
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">
-            Question {currentQuestion + 1} of {questions.length}
-          </p>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-green-600 h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-
-        {/* Timer Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-          <div 
-            className={`h-1 rounded-full transition-all duration-1000 ${timeLeft <= 5 ? 'bg-red-500' : 'bg-blue-500'}`}
-            style={{ width: `${(timeLeft / 15) * 100}%` }}
-          ></div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">{currentQ.question}</h3>
-          <div className="space-y-3">
-            {currentQ.options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerSelect(index)}
-                className={`w-full p-4 text-left rounded-lg border transition-colors ${
-                  selectedAnswers[currentQuestion] === index
-                    ? 'border-green-600 bg-green-50 text-green-800'
-                    : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
-                }`}
+    <div className="space-y-6">
+      {!completed ? (
+        <Card className="w-full max-w-3xl mx-auto">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>{quiz.title}</CardTitle>
+              <div className="flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full">
+                <Timer className="h-4 w-4 mr-1" />
+                <span className="text-sm font-medium">{formatTime(timeLeft)}</span>
+              </div>
+            </div>
+            <CardDescription>
+              Question {currentQuestionIndex + 1} of {totalQuestions}
+            </CardDescription>
+            <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="h-1" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
+              <RadioGroup 
+                value={selectedAnswers[currentQuestionIndex] || ""}
+                onValueChange={handleAnswerSelect}
+                className="space-y-3"
               >
-                <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                    selectedAnswers[currentQuestion] === index
-                      ? 'border-green-600 bg-green-600'
-                      : 'border-gray-300'
-                  }`}>
-                    {selectedAnswers[currentQuestion] === index && (
-                      <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
-                    )}
+                {currentQuestion.options.map((option: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50">
+                    <RadioGroupItem value={option} id={`option-${index}`} />
+                    <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                      {option}
+                    </Label>
                   </div>
-                  {option}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button 
-            onClick={handleNext}
-            disabled={selectedAnswers[currentQuestion] === -1}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {currentQuestion === questions.length - 1 ? 'Submit Quiz' : 'Next'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+                ))}
+              </RadioGroup>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button 
+              onClick={handlePrevQuestion}
+              variant="outline"
+              disabled={currentQuestionIndex === 0}
+            >
+              Previous
+            </Button>
+            <div className="flex gap-2">
+              {currentQuestionIndex === totalQuestions - 1 ? (
+                <Button onClick={handleSubmitQuiz}>
+                  Submit Quiz
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleNextQuestion}
+                  disabled={!selectedAnswers[currentQuestionIndex]}
+                >
+                  Next Question
+                </Button>
+              )}
+            </div>
+          </CardFooter>
+        </Card>
+      ) : (
+        <CertificateGenerator
+          courseId={courseId}
+          courseTitle={quiz.course_title || "Course"}
+          lessons={quiz.lessons || 10}
+          hours={4}
+          score={score}
+          completed={true}
+        />
+      )}
+    </div>
   );
 };
 
