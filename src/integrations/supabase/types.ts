@@ -90,6 +90,7 @@ export type Database = {
           students: number | null
           title: string
           updated_at: string
+          video_file_path: string | null
           video_url: string | null
         }
         Insert: {
@@ -107,6 +108,7 @@ export type Database = {
           students?: number | null
           title: string
           updated_at?: string
+          video_file_path?: string | null
           video_url?: string | null
         }
         Update: {
@@ -124,6 +126,7 @@ export type Database = {
           students?: number | null
           title?: string
           updated_at?: string
+          video_file_path?: string | null
           video_url?: string | null
         }
         Relationships: []
@@ -163,6 +166,79 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          course_id: string | null
+          id: string
+          score: number
+          total_questions: number
+          user_id: string | null
+        }
+        Insert: {
+          answers: Json
+          completed_at?: string | null
+          course_id?: string | null
+          id?: string
+          score: number
+          total_questions: number
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          course_id?: string | null
+          id?: string
+          score?: number
+          total_questions?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_answer: number
+          course_id: string | null
+          created_at: string | null
+          id: string
+          options: Json
+          question: string
+        }
+        Insert: {
+          correct_answer: number
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          options: Json
+          question: string
+        }
+        Update: {
+          correct_answer?: number
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          options?: Json
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Play, Clock, Users, Award, Star, CheckCircle } from 'lucide-react';
+import { Play, Clock, Users, Award, Star, CheckCircle, Video, Quiz } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import QuizComponent from '@/components/QuizComponent';
 
 const CoursePage = () => {
   const { id } = useParams();
@@ -19,6 +20,8 @@ const CoursePage = () => {
   const [course, setCourse] = useState<any>(null);
   const [enrollment, setEnrollment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string>('');
 
   useEffect(() => {
     fetchCourse();
@@ -37,6 +40,16 @@ const CoursePage = () => {
 
       if (error) throw error;
       setCourse(data);
+      
+      // Get video URL if it's stored locally
+      if (data.video_file_path) {
+        const { data: urlData } = supabase.storage
+          .from('course-videos')
+          .getPublicUrl(data.video_file_path);
+        setVideoUrl(urlData.publicUrl);
+      } else if (data.video_url) {
+        setVideoUrl(data.video_url);
+      }
     } catch (error) {
       console.error('Error fetching course:', error);
       toast({
@@ -93,12 +106,6 @@ const CoursePage = () => {
         description: "Failed to enroll in course",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleWatchVideo = () => {
-    if (course?.video_url) {
-      window.open(course.video_url, '_blank');
     }
   };
 
@@ -184,10 +191,39 @@ const CoursePage = () => {
                         <CheckCircle className="h-5 w-5 mr-2" />
                         Enrolled
                       </div>
-                      <Button onClick={handleWatchVideo} className="w-full bg-green-600 hover:bg-green-700">
-                        <Play className="h-4 w-4 mr-2" />
-                        Watch Video
-                      </Button>
+                      
+                      {/* Video Player */}
+                      {videoUrl && (
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold mb-4">Course Video</h3>
+                          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                            <video 
+                              controls 
+                              className="w-full h-full"
+                              src={videoUrl}
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex space-x-4">
+                        {videoUrl && (
+                          <Button className="bg-green-600 hover:bg-green-700 flex-1">
+                            <Video className="h-4 w-4 mr-2" />
+                            Video Available
+                          </Button>
+                        )}
+                        <Button 
+                          onClick={() => setShowQuiz(true)} 
+                          variant="outline" 
+                          className="border-green-600 text-green-600 hover:bg-green-50 flex-1"
+                        >
+                          <Quiz className="h-4 w-4 mr-2" />
+                          Take Quiz
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <Button onClick={handleEnroll} className="w-full bg-green-600 hover:bg-green-700">
@@ -197,6 +233,14 @@ const CoursePage = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Quiz Component */}
+              {showQuiz && enrollment && (
+                <QuizComponent 
+                  courseId={id!} 
+                  onClose={() => setShowQuiz(false)}
+                />
+              )}
             </div>
 
             <div className="lg:col-span-1">
@@ -220,6 +264,12 @@ const CoursePage = () => {
                   <div>
                     <strong>Rating:</strong> {course.rating}/5
                   </div>
+                  {course.video_file_path && (
+                    <div className="flex items-center text-blue-600">
+                      <Video className="h-4 w-4 mr-1" />
+                      <span className="text-sm">Local video available</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

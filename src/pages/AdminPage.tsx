@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Users, BookOpen, MessageSquare, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, BookOpen, MessageSquare, Shield, Upload, Video } from 'lucide-react';
 
 const AdminPage = () => {
   const { user } = useAuth();
@@ -26,6 +25,7 @@ const AdminPage = () => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [courseForm, setCourseForm] = useState({
     title: '',
     description: '',
@@ -34,6 +34,7 @@ const AdminPage = () => {
     level: 'Beginner',
     category: '',
     video_url: '',
+    video_file_path: '',
     is_featured: false
   });
 
@@ -108,6 +109,39 @@ const AdminPage = () => {
     }
   };
 
+  const handleVideoUpload = async (file: File) => {
+    if (!file) return null;
+    
+    setUploadingVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `courses/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-videos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('course-videos')
+        .getPublicUrl(filePath);
+
+      return filePath;
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload video file.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -131,6 +165,7 @@ const AdminPage = () => {
         level: 'Beginner',
         category: '',
         video_url: '',
+        video_file_path: '',
         is_featured: false
       });
       fetchData();
@@ -209,6 +244,7 @@ const AdminPage = () => {
       level: course.level || 'Beginner',
       category: course.category || '',
       video_url: course.video_url || '',
+      video_file_path: course.video_file_path || '',
       is_featured: course.is_featured || false
     });
     setShowCourseForm(true);
@@ -374,7 +410,32 @@ const AdminPage = () => {
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="video_url">Video URL</Label>
+                        <Label htmlFor="video_file">Video File</Label>
+                        <Input
+                          id="video_file"
+                          type="file"
+                          accept="video/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const filePath = await handleVideoUpload(file);
+                              if (filePath) {
+                                setCourseForm({...courseForm, video_file_path: filePath});
+                              }
+                            }
+                          }}
+                          disabled={uploadingVideo}
+                        />
+                        {uploadingVideo && <p className="text-sm text-gray-500 mt-1">Uploading video...</p>}
+                        {courseForm.video_file_path && (
+                          <div className="flex items-center mt-2 text-sm text-green-600">
+                            <Video className="h-4 w-4 mr-1" />
+                            Video uploaded successfully
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="video_url">Or Video URL (Optional)</Label>
                         <Input
                           id="video_url"
                           value={courseForm.video_url}
@@ -393,7 +454,7 @@ const AdminPage = () => {
                         <Label htmlFor="is_featured">Featured Course</Label>
                       </div>
                       <div className="flex space-x-2">
-                        <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                        <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={uploadingVideo}>
                           {editingCourse ? 'Update Course' : 'Create Course'}
                         </Button>
                         <Button type="button" variant="outline" onClick={() => {
@@ -418,6 +479,12 @@ const AdminPage = () => {
                           {course.is_featured && (
                             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                               Featured
+                            </Badge>
+                          )}
+                          {course.video_file_path && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                              <Video className="h-3 w-3 mr-1" />
+                              Local Video
                             </Badge>
                           )}
                         </div>
