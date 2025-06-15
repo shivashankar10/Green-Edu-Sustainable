@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState } from 'react';
 
-// Props to accept course and score data for the certificate
 interface SampleCertificateProps {
   courseTitle?: string;
   lessons?: number;
@@ -14,7 +13,6 @@ interface SampleCertificateProps {
   certificateCode?: string;
 }
 
-// Default course certificate fallback
 const DEFAULT_COURSE = {
   title: "Renewable Energy Fundamentals",
   lessons: 12,
@@ -47,7 +45,6 @@ const SampleCertificate = ({
     day: 'numeric'
   });
 
-  // Only show certificate if completed and score >= 80%
   const displayCertificate = (typeof completed === 'boolean' ? completed : DEFAULT_COURSE.completed) &&
     (typeof score === 'number' ? score : DEFAULT_COURSE.score) >= 80;
 
@@ -96,7 +93,6 @@ const SampleCertificate = ({
           <span className="text-sm font-medium">Score: {score ?? DEFAULT_COURSE.score}%</span>
         </div>
 
-        {/* Certificate Code */}
         {certificateCode && (
           <div className="bg-gray-50 p-2 rounded">
             <p className="text-xs text-gray-600 font-mono">{certificateCode}</p>
