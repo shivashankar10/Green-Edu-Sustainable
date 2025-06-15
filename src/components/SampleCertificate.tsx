@@ -185,29 +185,33 @@ const SampleCertificate = ({
           </div>
         </div>
 
-        {/* Move Date/Signature section above the footer border */}
-        <div className="w-full flex justify-between items-end pt-2 pb-2" style={{ marginTop: 8 }}>
-          <div className="text-left mb-8">
+        {/* Absolutely positioned Date/Signature row */}
+        <div
+          className="absolute left-0 right-0 flex justify-between items-end px-8"
+          style={{
+            bottom: '0.8cm', // 8mm per spec
+            width: '100%',
+            pointerEvents: 'none', // avoid overlapping clicks, only visual
+          }}
+        >
+          <div className="text-left mb-0 pointer-events-auto">
             <p className="text-sm text-gray-500">Date of Completion</p>
             <p className="font-semibold text-lg text-black">{completionDate}</p>
           </div>
-
-          <div className="text-right flex flex-col items-end mb-8">
-            {/* Signature image */}
+          <div className="text-right flex flex-col items-end mb-0 pointer-events-auto">
             <img
               src={SIGNATURE_URL}
               alt="Authorized Signature"
-              className="h-24 w-auto object-contain mb-1"
+              className="h-20 w-auto object-contain mb-1"
               style={{
                 maxWidth: 180,
                 filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
               }}
               draggable={false}
             />
-            {/* Prominent Authorized Signature label, more visible */}
             <p
               className="text-base font-bold text-green-900 mt-0 bg-green-50 border border-green-200 rounded px-3 py-1"
-              style={{ letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}
+              style={{ letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(0,0,0,0.02)", backgroundClip: "padding-box" }}
             >
               Authorized Signature
             </p>
