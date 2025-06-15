@@ -47,7 +47,7 @@ const HeroSection = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 mb-1">10+</div>
                 <div className="text-sm text-gray-600">Video Lessons</div>
@@ -57,11 +57,14 @@ const HeroSection = () => {
                 <div className="text-sm text-gray-600">Active Learners</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 mb-1">1k+</div>
+                <div className="text-2xl font-bold text-green-600 mb-1">1,256+</div>
                 <div className="text-sm text-gray-600">Certificates Issued</div>
               </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">2,000+</div>
+                <div className="text-sm text-gray-600">Students Enrolled</div>
+              </div>
             </div>
-            {/* You can add 2,000+ Students Enrolled if you want, for now these are the main stats shown */}
           </div>
 
           {/* Right Column - Sample Certificate */}
