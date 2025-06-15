@@ -52,7 +52,7 @@ const SampleCertificate = ({
         minHeight: '210mm',
       }}
     >
-      {/* Watermark grid background: "greenedu" text in every cell, brighter and more visible */}
+      {/* Watermark grid background: "greenedu" text in every cell, much lighter and less bright */}
       <div
         className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
@@ -60,8 +60,8 @@ const SampleCertificate = ({
           zIndex: 0,
           opacity: 1, // full so we control per-span
           userSelect: "none",
-          backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.06) 50px 60px), 
-            repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.06) 50px 60px)`,
+          backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.02) 50px 60px), 
+            repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.02) 50px 60px)`,
         }}
       >
         <div
@@ -95,11 +95,11 @@ const SampleCertificate = ({
                   fontWeight: 800,
                   color: "#22c55e",
                   letterSpacing: "0.075em",
-                  opacity: 0.29, // brighter and more visible
+                  opacity: 0.08, // much lighter - reduced from 0.29 to 0.08
                   textTransform: "lowercase",
                   whiteSpace: "nowrap",
                   userSelect: "none",
-                  textShadow: "0 1px 4px #fff, 0 1px 16px #b4f8d8",
+                  textShadow: "0 1px 2px rgba(255,255,255,0.3)", // much lighter shadow
                   pointerEvents: 'none',
                   fontFamily: 'inherit, sans-serif'
                 }}
