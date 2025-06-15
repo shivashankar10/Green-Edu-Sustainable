@@ -4,6 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { QrCode } from 'lucide-react';
 
+// Change this to your own logo if available!
+const LOGO_URL = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=256&h=256&fit=crop";
+
 interface SampleCertificateProps {
   courseTitle: string;
   lessons: number;
@@ -36,58 +39,61 @@ const SampleCertificate = ({
     `${window.location.origin}/verify-certificate?code=${certificateCode}` : 
     `${window.location.origin}/verify-certificate`;
 
-  // Watermark grid config
-  const watermarkText = "greenedu platform";
-  const rows = 7; // Number of rows
-  const cols = 4; // Number of columns
-
   return (
     <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
-      {/* Watermark grid background across whole certificate */}
+      {/* Logo watermark grid background */}
       <div
         className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
         style={{
           zIndex: 0,
-          opacity: 0.10,
+          opacity: 0.13,
           userSelect: "none",
-          display: "flex",
-          flexDirection: "column",
+          backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px), 
+            repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px)`,
         }}
       >
-        {[...Array(rows)].map((_, rowIdx) => (
-          <div
-            key={rowIdx}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-evenly",
-            }}
-          >
-            {[...Array(cols)].map((_, colIdx) => (
-              <span
-                key={colIdx}
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            inset: 0,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, 1fr)',
+            gridTemplateRows: 'repeat(7, 1fr)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {[...Array(7 * 6)].map((_, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+            >
+              <img
+                src={LOGO_URL}
                 style={{
-                  transform: "rotate(-30deg)",
-                  fontSize: "2.1rem",
-                  fontWeight: 700,
-                  color: "#22c55e", // Tailwind green-500
-                  letterSpacing: "0.11em",
-                  whiteSpace: "nowrap",
-                  opacity: 1,
-                  textTransform: "lowercase",
-                  // Offset every other row for a staggered look
-                  marginLeft: rowIdx % 2 === 1 && colIdx === 0 ? "4rem" : undefined,
-                  userSelect: "none",
-                  textShadow: "0 2px 12px white",
+                  width: 56,
+                  height: 56,
+                  opacity: 0.11,
+                  filter: "grayscale(1)",
+                  mixBlendMode: "multiply",
+                  pointerEvents: 'none',
+                  userSelect: 'none',
                 }}
-              >
-                {watermarkText}
-              </span>
-            ))}
-          </div>
-        ))}
+                draggable={false}
+                alt="logo watermark"
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="relative z-10 text-center space-y-6">
