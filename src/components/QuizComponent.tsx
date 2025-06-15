@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -56,7 +55,7 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
       const transformedQuestions: QuizQuestion[] = data.map(item => ({
         id: item.id,
         question: item.question,
-        options: Array.isArray(item.options) ? item.options : [],
+        options: Array.isArray(item.options) ? item.options as string[] : [],
         correct_answer: item.correct_answer
       }));
 
