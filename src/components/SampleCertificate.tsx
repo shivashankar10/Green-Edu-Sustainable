@@ -41,13 +41,13 @@ const SampleCertificate = ({
 
   return (
     <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
-      {/* Logo watermark grid background */}
+      {/* Watermark grid background: logo above text in every cell */}
       <div
         className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
         style={{
           zIndex: 0,
-          opacity: 0.13,
+          opacity: 0.17,
           userSelect: "none",
           backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px), 
             repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px)`,
@@ -71,6 +71,7 @@ const SampleCertificate = ({
               key={idx}
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 pointerEvents: 'none',
@@ -80,17 +81,35 @@ const SampleCertificate = ({
               <img
                 src={LOGO_URL}
                 style={{
-                  width: 56,
-                  height: 56,
-                  opacity: 0.11,
+                  width: 38,
+                  height: 38,
+                  opacity: 0.13,
                   filter: "grayscale(1)",
                   mixBlendMode: "multiply",
+                  marginBottom: 2,
                   pointerEvents: 'none',
                   userSelect: 'none',
                 }}
                 draggable={false}
                 alt="logo watermark"
               />
+              <span
+                style={{
+                  fontSize: "0.96rem",
+                  fontWeight: 700,
+                  color: "#22c55e",
+                  letterSpacing: "0.06em",
+                  opacity: 0.18,
+                  textTransform: "lowercase",
+                  whiteSpace: "nowrap",
+                  userSelect: "none",
+                  textShadow: "0 1px 6px white",
+                  pointerEvents: 'none',
+                  fontFamily: 'inherit, sans-serif'
+                }}
+              >
+                greenedu platform
+              </span>
             </div>
           ))}
         </div>
@@ -158,4 +177,3 @@ const SampleCertificate = ({
 };
 
 export default SampleCertificate;
-
