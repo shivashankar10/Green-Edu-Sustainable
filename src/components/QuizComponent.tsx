@@ -52,8 +52,16 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
         return;
       }
 
-      setQuestions(data);
-      setSelectedAnswers(new Array(data.length).fill(-1));
+      // Transform the data to match our interface
+      const transformedQuestions: QuizQuestion[] = data.map(item => ({
+        id: item.id,
+        question: item.question,
+        options: Array.isArray(item.options) ? item.options : [],
+        correct_answer: item.correct_answer
+      }));
+
+      setQuestions(transformedQuestions);
+      setSelectedAnswers(new Array(transformedQuestions.length).fill(-1));
     } catch (error) {
       console.error('Error fetching questions:', error);
       toast({

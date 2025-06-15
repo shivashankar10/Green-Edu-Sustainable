@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Play, Clock, Users, Award, Star, CheckCircle, Video, Quiz } from 'lucide-react';
+import { Play, Clock, Users, Award, Star, CheckCircle, Video, HelpCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import QuizComponent from '@/components/QuizComponent';
@@ -220,7 +219,7 @@ const CoursePage = () => {
                           variant="outline" 
                           className="border-green-600 text-green-600 hover:bg-green-50 flex-1"
                         >
-                          <Quiz className="h-4 w-4 mr-2" />
+                          <HelpCircle className="h-4 w-4 mr-2" />
                           Take Quiz
                         </Button>
                       </div>
