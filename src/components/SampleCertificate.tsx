@@ -36,31 +36,58 @@ const SampleCertificate = ({
     `${window.location.origin}/verify-certificate?code=${certificateCode}` : 
     `${window.location.origin}/verify-certificate`;
 
+  // Watermark grid config
+  const watermarkText = "greenedu platform";
+  const rows = 7; // Number of rows
+  const cols = 4; // Number of columns
+
   return (
     <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
-      {/* Watermark background */}
+      {/* Watermark grid background across whole certificate */}
       <div
-        className="pointer-events-none select-none absolute inset-0 flex items-center justify-center"
+        className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
         style={{
           zIndex: 0,
           opacity: 0.10,
           userSelect: "none",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        <span
-          style={{
-            transform: "rotate(-25deg)",
-            fontSize: "3rem",
-            fontWeight: 900,
-            color: "#22c55e", // Tailwind green-500
-            letterSpacing: "0.15em",
-            whiteSpace: "nowrap",
-            textShadow: "0 2px 12px white"
-          }}
-        >
-          GreenEdu Platform
-        </span>
+        {[...Array(rows)].map((_, rowIdx) => (
+          <div
+            key={rowIdx}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-evenly",
+            }}
+          >
+            {[...Array(cols)].map((_, colIdx) => (
+              <span
+                key={colIdx}
+                style={{
+                  transform: "rotate(-30deg)",
+                  fontSize: "2.1rem",
+                  fontWeight: 700,
+                  color: "#22c55e", // Tailwind green-500
+                  letterSpacing: "0.11em",
+                  whiteSpace: "nowrap",
+                  opacity: 1,
+                  textTransform: "lowercase",
+                  // Offset every other row for a staggered look
+                  marginLeft: rowIdx % 2 === 1 && colIdx === 0 ? "4rem" : undefined,
+                  userSelect: "none",
+                  textShadow: "0 2px 12px white",
+                }}
+              >
+                {watermarkText}
+              </span>
+            ))}
+          </div>
+        ))}
       </div>
 
       <div className="relative z-10 text-center space-y-6">
@@ -125,3 +152,4 @@ const SampleCertificate = ({
 };
 
 export default SampleCertificate;
+
