@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import CertificateGenerator from './CertificateGenerator';
 import SampleCertificate from './SampleCertificate';
 import html2canvas from 'html2canvas';
+import { useCertificateData } from '@/hooks/useCertificateData';
 
 interface Question {
   id: string;
@@ -35,9 +36,11 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const [timeLeft, setTimeLeft] = useState(15);
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [course, setCourse] = useState<any>(null);
-  const [certificateCode] = useState<string | undefined>(undefined);
   const certificateRef = useRef<HTMLDivElement>(null);
   const [quizCompleted, setQuizCompleted] = useState(false);
+
+  // NEW: Generate certificate on quiz completion, use the same logic as CertificateGenerator
+  const { certificateData } = useCertificateData(courseId, score, showResults && score >= 80);
 
   useEffect(() => {
     fetchQuestions();
@@ -241,8 +244,14 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                           hours={parseInt(course.duration?.split(' ')[0] || '0')}
                           score={score}
                           completed={true}
-                          certificateCode={certificateCode}
+                          certificateCode={certificateData?.certificate_code}
                         />
+                        {/* If there is no certificate code yet, show fallback */}
+                        {!certificateData?.certificate_code && (
+                          <div className="text-sm text-center text-red-500 mt-6">
+                            Certificate code not generated yet. Please wait a moment and <span className="underline cursor-pointer" onClick={() => window.location.reload()}>reload</span> if needed.
+                          </div>
+                        )}
                       </div>
                     </div>
                     <Button
@@ -283,6 +292,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                           });
                         }
                       }}
+                      disabled={!certificateData?.certificate_code}
                     >
                       Download Certificate (A4 Landscape PNG)
                     </Button>
