@@ -103,7 +103,7 @@ const CompletedCoursesSection = () => {
                 <h3 className="text-lg font-semibold text-green-900 mb-2">{course.title}</h3>
                 <SampleCertificate
                   courseTitle={course.title}
-                  lessons={course.lessons}
+                  lessons={Number(course.lessons)}
                   hours={course.duration}
                   score={course.score}
                   completed={course.completed}
