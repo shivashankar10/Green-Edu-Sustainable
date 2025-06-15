@@ -1,343 +1,298 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, XCircle, Timer, Award } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import CertificateGenerator from './CertificateGenerator';
 
-// Mock quiz data as fallback
-const createMockQuiz = (courseTitle: string) => ({
-  title: `${courseTitle} Quiz`,
-  course_title: courseTitle,
-  time_limit: 150, // 15 seconds per question * 10 questions
-  lessons: 10,
-  questions: [
-    {
-      question: "What is the main focus of sustainable development?",
-      options: [
-        "Economic growth only",
-        "Environmental protection only", 
-        "Balancing economic, social, and environmental needs",
-        "Population control"
-      ],
-      correct_answer: "Balancing economic, social, and environmental needs"
-    },
-    {
-      question: "Which of the following is a renewable energy source?",
-      options: [
-        "Coal",
-        "Natural gas",
-        "Solar energy",
-        "Nuclear energy"
-      ],
-      correct_answer: "Solar energy"
-    },
-    {
-      question: "What does the term 'carbon footprint' refer to?",
-      options: [
-        "The size of your shoes",
-        "The amount of carbon dioxide produced by activities",
-        "The number of trees planted",
-        "The weight of carbon materials"
-      ],
-      correct_answer: "The amount of carbon dioxide produced by activities"
-    },
-    {
-      question: "Which practice helps reduce waste?",
-      options: [
-        "Single-use plastics",
-        "Recycling and reusing materials",
-        "Burning waste",
-        "Buying more products"
-      ],
-      correct_answer: "Recycling and reusing materials"
-    },
-    {
-      question: "What is biodiversity?",
-      options: [
-        "The variety of life forms in an ecosystem",
-        "The study of biology",
-        "A type of renewable energy",
-        "A method of farming"
-      ],
-      correct_answer: "The variety of life forms in an ecosystem"
-    }
-  ]
-});
+interface Question {
+  id: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+}
 
-export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string; quiz: any; onComplete: (score: number) => void }) => {
-  // All hooks must be declared at the top level, before any conditional logic
-  const [actualQuiz, setActualQuiz] = useState(quiz);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(15); // 15 seconds per question
-  const [completed, setCompleted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const [quizStarted, setQuizStarted] = useState(false);
+interface QuizComponentProps {
+  courseId: string;
+  quiz: any;
+  onComplete: (score: number) => void;
+}
+
+const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  
-  // Initialize quiz data
-  useEffect(() => {
-    if (!quiz) {
-      setActualQuiz(createMockQuiz("Course"));
-    } else {
-      setActualQuiz(quiz);
-    }
-  }, [quiz]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
+  const [isQuizActive, setIsQuizActive] = useState(false);
+  const [course, setCourse] = useState<any>(null);
 
-  // Question timer effect - auto advance to next question
   useEffect(() => {
-    if (!quizStarted || completed || !actualQuiz) return;
+    fetchQuestions();
+    fetchCourse();
+  }, [courseId]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
     
-    const timer = setInterval(() => {
-      setQuestionTimeLeft(prev => {
-        if (prev <= 1) {
-          // Auto advance to next question when time runs out
-          if (currentQuestionIndex < actualQuiz.questions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
-            return 15; // Reset timer for next question
-          } else {
-            // Quiz completed
-            handleSubmitQuiz();
-            return 0;
-          }
-        }
-        return prev - 1;
+    if (isQuizActive && timeLeft > 0 && !showResults) {
+      timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isQuizActive && !showResults) {
+      // Time's up, move to next question with no answer
+      handleNextQuestion();
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [timeLeft, isQuizActive, showResults]);
+
+  const fetchCourse = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .single();
+
+      if (error) throw error;
+      setCourse(data);
+    } catch (error) {
+      console.error('Error fetching course:', error);
+    }
+  };
+
+  const fetchQuestions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('quiz_questions')
+        .select('*')
+        .eq('course_id', courseId)
+        .limit(12);
+
+      if (error) throw error;
+
+      const formattedQuestions = data.map(q => ({
+        id: q.id,
+        question: q.question,
+        options: Array.isArray(q.options) ? q.options : JSON.parse(q.options as string),
+        correct_answer: q.correct_answer
+      }));
+
+      setQuestions(formattedQuestions);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load quiz questions",
+        variant: "destructive"
       });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [quizStarted, completed, actualQuiz, currentQuestionIndex]);
-
-  // Reset timer when question changes
-  useEffect(() => {
-    if (quizStarted) {
-      setQuestionTimeLeft(15);
+      setLoading(false);
     }
-  }, [currentQuestionIndex, quizStarted]);
-
-  // NOW we can do the conditional rendering after all hooks are declared
-  if (!actualQuiz || !actualQuiz.questions) {
-    return (
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle>Loading Quiz...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center p-8">
-            <div>Please wait while the quiz loads...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const totalQuestions = actualQuiz.questions.length;
-  const currentQuestion = actualQuiz.questions[currentQuestionIndex];
-  
-  const handleAnswerSelect = (answer: string) => {
-    setSelectedAnswers({
-      ...selectedAnswers,
-      [currentQuestionIndex]: answer
-    });
-    
-    // Auto advance to next question after selecting answer
-    setTimeout(() => {
-      if (currentQuestionIndex < totalQuestions - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      } else {
-        handleSubmitQuiz();
-      }
-    }, 500); // Small delay to show selection
   };
-  
-  const calculateScore = () => {
-    let correctAnswers = 0;
+
+  const startQuiz = () => {
+    setIsQuizActive(true);
+    setTimeLeft(15);
+  };
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleNextQuestion = () => {
+    // Record the answer (or -1 if no answer selected)
+    const newAnswers = [...userAnswers, selectedAnswer ?? -1];
+    setUserAnswers(newAnswers);
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedAnswer(null);
+      setTimeLeft(15); // Reset timer for next question
+    } else {
+      // Quiz finished
+      finishQuiz(newAnswers);
+    }
+  };
+
+  const finishQuiz = async (answers: number[]) => {
+    setIsQuizActive(false);
     
-    actualQuiz.questions.forEach((question: any, index: number) => {
-      if (selectedAnswers[index] === question.correct_answer) {
-        correctAnswers++;
+    // Calculate score
+    let correctCount = 0;
+    questions.forEach((question, index) => {
+      if (answers[index] === question.correct_answer) {
+        correctCount++;
       }
     });
-    
-    return Math.round((correctAnswers / totalQuestions) * 100);
-  };
-  
-  const handleSubmitQuiz = () => {
-    const finalScore = calculateScore();
+
+    const finalScore = Math.round((correctCount / questions.length) * 100);
     setScore(finalScore);
-    setCompleted(true);
     setShowResults(true);
-    
-    // Call the onComplete callback with the score
+
+    // Save quiz attempt
+    if (user) {
+      try {
+        await supabase.from('quiz_attempts').insert({
+          user_id: user.id,
+          course_id: courseId,
+          score: finalScore,
+          total_questions: questions.length,
+          answers: answers
+        });
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+
     onComplete(finalScore);
   };
 
-  const handleStartQuiz = () => {
-    setQuizStarted(true);
-    setQuestionTimeLeft(15);
-  };
-  
-  const getProgressColor = (score: number) => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 60) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  // Quiz start screen
-  if (!quizStarted && !completed) {
+  if (loading) {
     return (
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl">{actualQuiz.title}</CardTitle>
-          <CardDescription>
-            Get ready for your quiz! You'll have 15 seconds per question.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-semibold text-yellow-800 mb-2">Quiz Instructions:</h3>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Each question has a 15-second time limit</li>
-              <li>• Questions advance automatically after selection or timeout</li>
-              <li>• No going back to previous questions</li>
-              <li>• You need 80% or higher to earn a certificate</li>
-              <li>• Total questions: {totalQuestions}</li>
-            </ul>
-          </div>
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="p-6">
+          <div className="text-center">Loading quiz...</div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleStartQuiz} className="w-full bg-green-600 hover:bg-green-700">
-            Start Quiz
-          </Button>
-        </CardFooter>
       </Card>
     );
   }
-  
+
+  if (questions.length === 0) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="p-6">
+          <div className="text-center">No quiz questions available for this course.</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (showResults) {
     return (
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl">Quiz Results</CardTitle>
-          <CardDescription>
-            You scored {score}% on this quiz
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex justify-center">
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Quiz Results</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="text-4xl font-bold text-green-600">{score}%</div>
+            <p className="text-lg">
+              You scored {score}% ({userAnswers.filter((answer, index) => answer === questions[index]?.correct_answer).length} out of {questions.length} correct)
+            </p>
             {score >= 80 ? (
-              <div className="text-center">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-2" />
-                <p className="text-xl font-bold text-green-700">Congratulations!</p>
-                <p className="text-gray-600">You passed the quiz and earned a certificate!</p>
+              <div className="space-y-4">
+                <p className="text-green-600 font-semibold">
+                  Congratulations! You passed the quiz and are eligible for a certificate.
+                </p>
+                {course && (
+                  <CertificateGenerator
+                    courseId={courseId}
+                    courseTitle={course.title}
+                    lessons={course.lessons || 0}
+                    hours={parseInt(course.duration?.split(' ')[0] || '0')}
+                    score={score}
+                    completed={true}
+                  />
+                )}
               </div>
             ) : (
-              <div className="text-center">
-                <XCircle className="h-16 w-16 text-red-500 mx-auto mb-2" />
-                <p className="text-xl font-bold text-red-700">Not quite there</p>
-                <p className="text-gray-600">You need 80% or higher to earn a certificate</p>
-              </div>
+              <p className="text-red-600">
+                You need at least 80% to earn a certificate. Please retake the quiz to improve your score.
+              </p>
             )}
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Your score</span>
-              <span className="font-medium">{score}%</span>
-            </div>
-            <Progress value={score} className={getProgressColor(score)} />
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="font-medium">Question Summary:</h3>
-            {actualQuiz.questions.map((question: any, index: number) => (
-              <div key={index} className="border rounded-md p-3">
-                <p className="font-medium">{question.question}</p>
-                <div className="flex items-center mt-2">
-                  <div className="mr-2">
-                    {selectedAnswers[index] === question.correct_answer ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm">Your answer: <span className={selectedAnswers[index] === question.correct_answer ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                      {selectedAnswers[index] || "Not answered"}
-                    </span></p>
-                    {selectedAnswers[index] !== question.correct_answer && (
-                      <p className="text-sm">Correct answer: <span className="text-green-600 font-medium">{question.correct_answer}</span></p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-          {/* Show certificate if score >= 80% */}
-          {score >= 80 && (
-            <CertificateGenerator
-              courseId={courseId}
-              courseTitle={actualQuiz.course_title || "Course"}
-              lessons={actualQuiz.lessons || 10}
-              hours={4}
-              score={score}
-              completed={true}
-            />
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button onClick={() => window.location.reload()}>
-            Retake Quiz
+  if (!isQuizActive) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Quiz Instructions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <p>• This quiz contains {questions.length} questions</p>
+            <p>• You have 15 seconds per question</p>
+            <p>• Questions will automatically advance when time expires</p>
+            <p>• You cannot go back to previous questions</p>
+            <p>• You need 80% or higher to earn a certificate</p>
+          </div>
+          <Button onClick={startQuiz} className="w-full bg-green-600 hover:bg-green-700">
+            Start Quiz
           </Button>
-        </CardFooter>
+        </CardContent>
       </Card>
     );
   }
-  
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+
   return (
-    <div className="space-y-6">
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <CardTitle>{actualQuiz.title}</CardTitle>
-            <div className="flex items-center bg-red-100 text-red-800 px-3 py-1 rounded-full">
-              <Timer className="h-4 w-4 mr-1" />
-              <span className="text-sm font-medium">{questionTimeLeft}s</span>
+            <CardTitle>Question {currentQuestionIndex + 1} of {questions.length}</CardTitle>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-red-600">{timeLeft}s</div>
+              <div className="text-sm text-gray-500">Time left</div>
             </div>
           </div>
-          <CardDescription>
-            Question {currentQuestionIndex + 1} of {totalQuestions}
-          </CardDescription>
-          <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="h-2" />
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
-            <RadioGroup 
-              value={selectedAnswers[currentQuestionIndex] || ""}
-              onValueChange={handleAnswerSelect}
-              className="space-y-3"
-            >
-              {currentQuestion.options.map((option: string, index: number) => (
-                <div key={index} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors">
-                  <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+          <Progress value={progressPercentage} className="w-full" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">{currentQuestion.question}</h3>
+          <div className="space-y-2">
+            {currentQuestion.options.map((option, index) => (
+              <Button
+                key={index}
+                variant={selectedAnswer === index ? "default" : "outline"}
+                className={`w-full text-left justify-start p-4 h-auto ${
+                  selectedAnswer === index 
+                    ? "bg-green-600 hover:bg-green-700 text-white" 
+                    : "hover:bg-gray-50"
+                }`}
+                onClick={() => handleAnswerSelect(index)}
+              >
+                <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                {option}
+              </Button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            Select an answer or wait for auto-advance
+          </div>
+          <Button 
+            onClick={handleNextQuestion}
+            className="bg-green-600 hover:bg-green-700"
+            disabled={selectedAnswer === null}
+          >
+            {currentQuestionIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

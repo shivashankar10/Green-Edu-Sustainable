@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import SampleCertificate from './SampleCertificate';
 import { useCertificateData } from '@/hooks/useCertificateData';
 import { generateCertificateCanvas, downloadCanvasAsPNG } from '@/utils/certificateCanvas';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CertificateGeneratorProps {
   courseId: string;
@@ -18,14 +19,14 @@ interface CertificateGeneratorProps {
 const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, completed }: CertificateGeneratorProps) => {
   const certificateRef = useRef<HTMLDivElement>(null);
   const { certificateData } = useCertificateData(courseId, score, completed);
+  const { user } = useAuth();
 
   const downloadCertificate = async () => {
-    if (!certificateRef.current || !certificateData) return;
+    if (!certificateRef.current || !certificateData || !user) return;
 
     try {
-      // Get user name from the certificate component
-      const nameElement = certificateRef.current.querySelector('[data-user-name]');
-      const userName = nameElement?.textContent || 'Student';
+      // Get user name from auth or use default
+      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student';
 
       // Generate canvas
       const canvas = generateCertificateCanvas(
