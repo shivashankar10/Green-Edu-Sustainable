@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import CertificateGenerator from './CertificateGenerator';
+import SampleCertificate from './SampleCertificate';
+import html2canvas from 'html2canvas';
 
 interface Question {
   id: string;
@@ -34,6 +35,8 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [course, setCourse] = useState<any>(null);
+  const [certificateCode, setCertificateCode] = useState<string | undefined>(undefined);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchQuestions();
@@ -142,20 +145,26 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
     setShowResults(true);
 
     // Save quiz attempt
+    let certCode: string | undefined = undefined;
     if (user) {
       try {
-        await supabase.from('quiz_attempts').insert({
+        const { data, error } = await supabase.from('quiz_attempts').insert({
           user_id: user.id,
           course_id: courseId,
           score: finalScore,
           total_questions: questions.length,
           answers: answers
-        });
+        }).select();
+
+        // Try to retrieve certificate_code if it exists in returned data
+        if (Array.isArray(data) && data.length > 0 && data[0]?.certificate_code) {
+          certCode = data[0].certificate_code;
+        }
       } catch (error) {
         console.error('Error saving quiz attempt:', error);
       }
     }
-
+    setCertificateCode(certCode);
     onComplete(finalScore);
   };
 
@@ -197,14 +206,37 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                   Congratulations! You passed the quiz and are eligible for a certificate.
                 </p>
                 {course && (
-                  <CertificateGenerator
-                    courseId={courseId}
-                    courseTitle={course.title}
-                    lessons={course.lessons || 0}
-                    hours={parseInt(course.duration?.split(' ')[0] || '0')}
-                    score={score}
-                    completed={true}
-                  />
+                  <>
+                    {/* Certificate display area */}
+                    <div ref={certificateRef} className="my-6">
+                      <SampleCertificate
+                        courseTitle={course.title}
+                        lessons={course.lessons || 0}
+                        hours={parseInt(course.duration?.split(' ')[0] || '0')}
+                        score={score}
+                        completed={true}
+                        certificateCode={certificateCode}
+                      />
+                    </div>
+                    {/* Download button */}
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white mt-2"
+                      onClick={async () => {
+                        if (!certificateRef.current) return;
+                        const canvas = await html2canvas(certificateRef.current, {
+                          backgroundColor: '#fff',
+                          scale: 2, // higher quality PNG
+                        });
+                        const url = canvas.toDataURL("image/png");
+                        const link = document.createElement("a");
+                        link.download = `Certificate-${course.title.replace(/\s/g, "_")}.png`;
+                        link.href = url;
+                        link.click();
+                      }}
+                    >
+                      Download Certificate
+                    </Button>
+                  </>
                 )}
               </div>
             ) : (
