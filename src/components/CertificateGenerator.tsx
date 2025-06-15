@@ -35,7 +35,7 @@ const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, co
       try {
         const QRCode = await import('qrcode');
         const verificationUrl = `${window.location.origin}/verify-certificate?code=${certData.certificate_code}`;
-        const qrDataUrl = await QRCode.default.toDataURL(verificationUrl, {
+        const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
           width: 200,
           margin: 2,
           color: {

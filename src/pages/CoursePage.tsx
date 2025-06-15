@@ -113,6 +113,11 @@ const CoursePage = () => {
     navigate(-1);
   };
 
+  const handleQuizComplete = (score: number) => {
+    setShowQuiz(false);
+    // Additional logic can be added here if needed
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -263,8 +268,9 @@ const CoursePage = () => {
                   {/* Quiz Component */}
                   {showQuiz && enrollment && (
                     <QuizComponent 
-                      courseId={id!} 
-                      onClose={() => setShowQuiz(false)}
+                      courseId={id!}
+                      quiz={null}
+                      onComplete={handleQuizComplete}
                     />
                   )}
                 </div>
