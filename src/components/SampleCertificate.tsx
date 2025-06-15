@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -41,16 +40,16 @@ const SampleCertificate = ({
 
   return (
     <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
-      {/* Watermark grid background: logo above text in every cell */}
+      {/* Watermark grid background: "greenedu" text in every cell, brighter and more visible */}
       <div
         className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
         style={{
           zIndex: 0,
-          opacity: 0.17,
+          opacity: 1, // full so we control per-span
           userSelect: "none",
-          backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px), 
-            repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.04) 50px 60px)`,
+          backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.06) 50px 60px), 
+            repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.06) 50px 60px)`,
         }}
       >
         <div
@@ -78,37 +77,22 @@ const SampleCertificate = ({
                 userSelect: 'none',
               }}
             >
-              <img
-                src={LOGO_URL}
-                style={{
-                  width: 38,
-                  height: 38,
-                  opacity: 0.13,
-                  filter: "grayscale(1)",
-                  mixBlendMode: "multiply",
-                  marginBottom: 2,
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                }}
-                draggable={false}
-                alt="logo watermark"
-              />
               <span
                 style={{
-                  fontSize: "0.96rem",
-                  fontWeight: 700,
+                  fontSize: "1.05rem",
+                  fontWeight: 800,
                   color: "#22c55e",
-                  letterSpacing: "0.06em",
-                  opacity: 0.18,
+                  letterSpacing: "0.075em",
+                  opacity: 0.29, // brighter and more visible
                   textTransform: "lowercase",
                   whiteSpace: "nowrap",
                   userSelect: "none",
-                  textShadow: "0 1px 6px white",
+                  textShadow: "0 1px 4px #fff, 0 1px 16px #b4f8d8",
                   pointerEvents: 'none',
                   fontFamily: 'inherit, sans-serif'
                 }}
               >
-                greenedu platform
+                greenedu
               </span>
             </div>
           ))}
