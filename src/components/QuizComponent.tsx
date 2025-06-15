@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -140,20 +139,6 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
       setIsTimerActive(true);
     } else {
       submitQuiz();
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      // Clear the timer
-      setIsTimerActive(false);
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-      
-      setCurrentQuestion(currentQuestion - 1);
-      setTimeLeft(15); // Reset timer
-      setIsTimerActive(true);
     }
   };
 
@@ -362,14 +347,7 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
           </div>
         </div>
 
-        <div className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-          >
-            Previous
-          </Button>
+        <div className="flex justify-end">
           <Button 
             onClick={handleNext}
             disabled={selectedAnswers[currentQuestion] === -1}
