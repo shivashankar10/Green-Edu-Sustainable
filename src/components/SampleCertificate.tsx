@@ -62,6 +62,12 @@ const SampleCertificate = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-auto border-4 border-green-100 relative overflow-hidden">
+      {/* Logo Header */}
+      <div className="bg-green-600 text-white p-3 rounded-lg mb-4 text-center">
+        <div className="text-xl font-bold">🌱 GreenEdu</div>
+        <div className="text-xs opacity-90">Educational Platform</div>
+      </div>
+
       {/* Certificate Header */}
       <div className="text-center mb-6">
         <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">

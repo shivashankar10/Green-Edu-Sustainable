@@ -24,6 +24,16 @@ export const generateCertificateCanvas = (
   ctx.lineWidth = 8;
   ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
 
+  // Add logo/brand section at the top
+  ctx.fillStyle = '#16a34a';
+  ctx.fillRect(30, 30, canvas.width - 60, 60);
+  
+  // Logo text (you can replace this with an actual logo image later)
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('🌱 GreenEdu', canvas.width / 2, 70);
+
   // Set text properties
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
@@ -31,22 +41,22 @@ export const generateCertificateCanvas = (
   // Title
   ctx.font = 'bold 32px Arial';
   ctx.fillStyle = '#16a34a';
-  ctx.fillText('Certificate of Completion', canvas.width / 2, 100);
+  ctx.fillText('Certificate of Completion', canvas.width / 2, 140);
 
   // Subtitle
   ctx.font = '16px Arial';
   ctx.fillStyle = '#666666';
-  ctx.fillText('This is to certify that', canvas.width / 2, 150);
+  ctx.fillText('This is to certify that', canvas.width / 2, 180);
 
   // User name
   ctx.font = 'bold 28px Arial';
   ctx.fillStyle = '#16a34a';
-  ctx.fillText(userName, canvas.width / 2, 200);
+  ctx.fillText(userName, canvas.width / 2, 220);
 
   // Course completion text
   ctx.font = '16px Arial';
   ctx.fillStyle = '#666666';
-  ctx.fillText('has successfully completed', canvas.width / 2, 250);
+  ctx.fillText('has successfully completed', canvas.width / 2, 260);
 
   // Course title
   ctx.font = 'bold 24px Arial';

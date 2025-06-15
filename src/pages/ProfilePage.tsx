@@ -3,6 +3,8 @@ import React from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +14,7 @@ const ProfilePage = () => {
   const { profile, saveProfile, loading } = useProfile();
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',
+    email: profile?.email || user?.email || '',
     phone_number: profile?.phone_number || '',
     college_name: profile?.college_name || '',
     college_mailid: profile?.college_mailid || '',
@@ -25,12 +28,13 @@ const ProfilePage = () => {
   React.useEffect(() => {
     setForm({
       full_name: profile?.full_name || '',
+      email: profile?.email || user?.email || '',
       phone_number: profile?.phone_number || '',
       college_name: profile?.college_name || '',
       college_mailid: profile?.college_mailid || '',
       gender: profile?.gender || '',
     });
-  }, [profile]);
+  }, [profile, user]);
 
   if (!user) {
     return (
@@ -46,10 +50,17 @@ const ProfilePage = () => {
     );
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleGenderChange = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      gender: value,
     }));
   };
 
@@ -59,11 +70,11 @@ const ProfilePage = () => {
     setSuccess(false);
     const { error } = await saveProfile({
       full_name: form.full_name,
+      email: form.email,
       phone_number: form.phone_number,
       college_name: form.college_name,
       college_mailid: form.college_mailid,
       gender: form.gender,
-      email: user.email,
     });
     setSaving(false);
     if (!error) {
@@ -76,9 +87,11 @@ const ProfilePage = () => {
     <main className="flex items-center justify-center min-h-screen bg-green-50">
       <form onSubmit={handleSave} className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full space-y-6">
         <h2 className="text-2xl font-bold text-green-700 mb-4 text-center">Edit Your Profile</h2>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+        
+        <div className="space-y-2">
+          <Label htmlFor="full_name" className="text-gray-700 font-medium">Full Name</Label>
           <Input
+            id="full_name"
             name="full_name"
             value={form.full_name}
             onChange={handleChange}
@@ -87,60 +100,80 @@ const ProfilePage = () => {
             className="bg-green-50"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Email</label>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
           <Input
+            id="email"
             name="email"
-            value={user.email}
-            disabled
-            className="bg-gray-100"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Your email address"
+            required
+            className="bg-green-50"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Phone Number</label>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone_number" className="text-gray-700 font-medium">Phone Number</Label>
           <Input
+            id="phone_number"
             name="phone_number"
             value={form.phone_number}
             onChange={handleChange}
             placeholder="Phone number"
+            className="bg-green-50"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">College Name</label>
+
+        <div className="space-y-2">
+          <Label htmlFor="college_name" className="text-gray-700 font-medium">College Name</Label>
           <Input
+            id="college_name"
             name="college_name"
             value={form.college_name}
             onChange={handleChange}
             placeholder="College name"
+            className="bg-green-50"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">College Mail ID <span className="text-xs text-gray-400">(optional)</span></label>
+
+        <div className="space-y-2">
+          <Label htmlFor="college_mailid" className="text-gray-700 font-medium">
+            College Mail ID <span className="text-xs text-gray-400">(optional)</span>
+          </Label>
           <Input
+            id="college_mailid"
             name="college_mailid"
+            type="email"
             value={form.college_mailid}
             onChange={handleChange}
             placeholder="Your college email"
+            className="bg-green-50"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Gender</label>
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            className="bg-green-50 border border-gray-300 rounded px-3 py-2 w-full"
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
+
+        <div className="space-y-2">
+          <Label htmlFor="gender" className="text-gray-700 font-medium">Gender</Label>
+          <Select value={form.gender} onValueChange={handleGenderChange}>
+            <SelectTrigger className="bg-green-50">
+              <SelectValue placeholder="Select gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
         <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={saving || loading}>
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? 'Saving...' : 'Save Profile'}
         </Button>
-        {success && <div className="text-green-700 font-medium text-center">Profile updated!</div>}
+        
+        {success && <div className="text-green-700 font-medium text-center">Profile updated successfully!</div>}
       </form>
     </main>
   );
