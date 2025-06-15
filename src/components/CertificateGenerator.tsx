@@ -29,15 +29,17 @@ const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, co
     try {
       // Get user name from profile first, then fallback to auth metadata or email
       const userName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student';
+      const userId = user?.id || '';
 
-      // Generate canvas
+      // Generate canvas with unique QR and userID info
       const canvas = generateCertificateCanvas(
         certificateData,
         courseTitle,
         lessons,
         hours,
         score,
-        userName
+        userName,
+        userId // pass userId here!
       );
 
       // Download the certificate

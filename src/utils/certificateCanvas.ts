@@ -1,3 +1,4 @@
+import QRCode from 'qrcode';
 
 export const generateCertificateCanvas = (
   certificateData: any,
@@ -5,7 +6,8 @@ export const generateCertificateCanvas = (
   lessons: number,
   hours: number,
   score: number,
-  userName: string
+  userName: string,
+  userId?: string // Add userId parameter
 ): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -77,9 +79,10 @@ export const generateCertificateCanvas = (
   ctx.fillStyle = '#16a34a';
   ctx.fillText('Certificate of Completion', canvas.width / 2, 140);
 
-  // Subtitle
+  // Subtitle and user info
   ctx.font = '16px Arial';
   ctx.fillStyle = '#666666';
+  ctx.textAlign = 'center';
   ctx.fillText('This is to certify that', canvas.width / 2, 180);
 
   // User name
@@ -87,19 +90,24 @@ export const generateCertificateCanvas = (
   ctx.fillStyle = '#16a34a';
   ctx.fillText(userName, canvas.width / 2, 220);
 
-  // Course completion text
+  // User ID
+  if (userId) {
+    ctx.font = 'italic 13px Arial';
+    ctx.fillStyle = '#888888';
+    ctx.fillText(`User ID: ${userId}`, canvas.width / 2, 242);
+  }
+
+  // Course completion text and title
   ctx.font = '16px Arial';
   ctx.fillStyle = '#666666';
-  ctx.fillText('has successfully completed', canvas.width / 2, 260);
+  ctx.fillText('has successfully completed', canvas.width / 2, 270);
 
-  // Course title
   ctx.font = 'bold 24px Arial';
   ctx.fillStyle = '#000000';
   const maxWidth = 600;
   const words = courseTitle.split(' ');
   let line = '';
-  let y = 300;
-
+  let y = 305;
   for (let n = 0; n < words.length; n++) {
     const testLine = line + words[n] + ' ';
     const metrics = ctx.measureText(testLine);
@@ -117,59 +125,69 @@ export const generateCertificateCanvas = (
   // Course details
   ctx.font = '14px Arial';
   ctx.fillStyle = '#666666';
-  ctx.fillText(`${hours} hours • ${lessons} lessons`, canvas.width / 2, y + 50);
+  ctx.fillText(`${hours} hours • ${lessons} lessons`, canvas.width / 2, y + 40);
 
   // Score
   ctx.font = 'bold 18px Arial';
   ctx.fillStyle = '#16a34a';
-  ctx.fillText(`Score: ${score}%`, canvas.width / 2, y + 90);
+  ctx.fillText(`Score: ${score}%`, canvas.width / 2, y + 75);
 
-  // Date
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Completion time
+  const completionDate = new Date().toLocaleString();
   ctx.font = '14px Arial';
-  ctx.fillStyle = '#666666';
-  ctx.fillText(currentDate, 200, canvas.height - 120);
-
-  // QR Code placeholder (simple square with border)
-  const qrSize = 60;
-  const qrX = canvas.width - 150;
-  const qrY = canvas.height - 140;
-  
-  // Draw QR code border
-  ctx.strokeStyle = '#333333';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(qrX, qrY, qrSize, qrSize);
-  
-  // Simple QR code pattern (placeholder)
   ctx.fillStyle = '#333333';
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if ((i + j) % 2 === 0) {
-        ctx.fillRect(qrX + i * 7 + 2, qrY + j * 7 + 2, 5, 5);
-      }
-    }
-  }
+  ctx.fillText(`Completed on: ${completionDate}`, canvas.width / 2, y + 105);
 
-  // QR Code label
-  ctx.font = '10px Arial';
-  ctx.fillStyle = '#666666';
-  ctx.textAlign = 'center';
-  ctx.fillText('Scan to Verify', qrX + qrSize/2, qrY + qrSize + 15);
+  // Add true QR code (overwriting placeholder version)
+  // QR will point to unique verification URL: https://yourdomain.com/verify-certificate?code=<certificate_code>
+  //NOTE: You may want to set your custom domain here:
+  const baseUrl = window?.location?.origin || "https://greenedu.com";
+  const verificationUrl = certificateData?.certificate_code
+    ? `${baseUrl}/verify-certificate?code=${certificateData.certificate_code}`
+    : `${baseUrl}/verify-certificate`;
+
+  // We'll block to allow QR drawing before allowing PNG download
+  // We'll run synchronously (not perfect for big PNGs, but fast enough for these certs)
+
+  // Create temp canvas for QR
+  const qrCanvas = document.createElement('canvas');
+  qrCanvas.width = 110;
+  qrCanvas.height = 110;
+
+  let done = false;
+  QRCode.toCanvas(qrCanvas, verificationUrl, { 
+    width: 110, 
+    margin: 1, 
+    color: { dark: '#22c55e', light: '#F9FAFB' }
+  }, (error) => {
+    if (!error && ctx) {
+      // Draw QR code onto certificate canvas
+      ctx.drawImage(qrCanvas, canvas.width - 170, canvas.height - 180, 110, 110);
+      // Label
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#888888';
+      ctx.textAlign = 'center';
+      ctx.fillText('Scan to verify', canvas.width - 115, canvas.height - 60);
+    }
+    done = true;
+  });
+
+  // Busy-wait for QR draw to complete (for sync PNG download flow)
+  // Usually takes <10ms, so acceptable for user-driven PNG downloads
+  while (!done) {
+    // eslint-disable-next-line no-empty
+  }
 
   // Certificate code
   ctx.font = '12px Arial';
   ctx.fillStyle = '#888888';
   ctx.textAlign = 'center';
-  ctx.fillText(`Certificate Code: ${certificateData.certificate_code}`, canvas.width / 2, canvas.height - 100);
+  ctx.fillText(`Certificate Code: ${certificateData.certificate_code}`, canvas.width / 2, canvas.height - 70);
 
   // Platform name
   ctx.font = 'bold 16px Arial';
   ctx.fillStyle = '#16a34a';
-  ctx.fillText('GreenEdu Platform', canvas.width / 2, canvas.height - 80);
+  ctx.fillText('GreenEdu Platform', canvas.width / 2, canvas.height - 40);
 
   return canvas;
 };
