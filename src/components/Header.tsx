@@ -69,7 +69,6 @@ const Header = () => {
 
   const handleNavigation = (href: string) => {
     if (href.startsWith('#')) {
-      // Handle anchor links for home page
       if (window.location.pathname !== '/') {
         navigate('/');
         setTimeout(() => {
@@ -85,6 +84,12 @@ const Header = () => {
     }
     setIsOpen(false);
   };
+
+  // Add handler for navigating to profile page
+  const handleProfile = () => {
+    setIsOpen(false);
+    navigate('/profile');
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-green-100">
@@ -111,11 +116,15 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop CTA Buttons */}
+          {/* Desktop CTA + Profile Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {session ? (
                 <>
                   <span className="text-sm font-medium text-gray-700 hidden sm:block">{session.user.email}</span>
+                  <Button variant="ghost" size="sm" onClick={handleProfile} className="text-green-700 hover:text-green-800">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Button>
                   {isAdmin && (
                     <Button 
                       variant="outline" 
@@ -167,6 +176,14 @@ const Header = () => {
                   {session ? (
                       <>
                         <div className="px-4 py-2 text-sm text-gray-600 truncate">{session.user.email}</div>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-green-700 hover:text-green-800"
+                          onClick={handleProfile}
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Button>
                         {isAdmin && (
                           <Button 
                             variant="ghost" 
@@ -207,3 +224,5 @@ const Header = () => {
 };
 
 export default Header;
+
+// src/components/Header.tsx is long (over 200 lines). Consider asking me to help you refactor it!

@@ -128,6 +128,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          college_mailid: string | null
+          college_name: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          gender: string | null
+          id: string
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          college_mailid?: string | null
+          college_name?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          gender?: string | null
+          id: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          college_mailid?: string | null
+          college_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
