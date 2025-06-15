@@ -22,6 +22,7 @@ const CoursePage = () => {
   const [loading, setLoading] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [pendingQuizScore, setPendingQuizScore] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCourse();
@@ -114,13 +115,14 @@ const CoursePage = () => {
   };
 
   const handleQuizComplete = (score: number) => {
-    setShowQuiz(false);
-    
+    setPendingQuizScore(score);
+    // We'll dismiss (setShowQuiz(false)) only when user closes results in QuizComponent
     toast({
       title: "Quiz Completed!",
       description: `You scored ${score}%. ${score >= 80 ? 'Congratulations!' : 'Try again to improve your score.'}`,
       variant: score >= 80 ? "default" : "destructive"
     });
+    setShowQuiz(false); // Only now, after user closes quiz, do we hide it
   };
 
   if (loading) {

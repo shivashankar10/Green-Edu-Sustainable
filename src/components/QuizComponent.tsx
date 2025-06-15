@@ -37,6 +37,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const [course, setCourse] = useState<any>(null);
   const [certificateCode] = useState<string | undefined>(undefined); // Always undefined since not in quiz_attempts
   const certificateRef = useRef<HTMLDivElement>(null);
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
     fetchQuestions();
@@ -158,7 +159,8 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
         console.error('Error saving quiz attempt:', error);
       }
     }
-    onComplete(finalScore);
+    setQuizCompleted(true); // newly added: only ready to close after user clicks close
+    // onComplete now gets called only when user leaves result screen
   };
 
   if (loading) {
@@ -200,7 +202,6 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                 </p>
                 {course && (
                   <>
-                    {/* Certificate display area */}
                     <div ref={certificateRef} className="my-6">
                       <SampleCertificate
                         courseTitle={course.title}
@@ -208,17 +209,16 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                         hours={parseInt(course.duration?.split(' ')[0] || '0')}
                         score={score}
                         completed={true}
-                        certificateCode={certificateCode} // always undefined, handled safely
+                        certificateCode={certificateCode}
                       />
                     </div>
-                    {/* Download button, always shown for ≥80% */}
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white mt-2"
                       onClick={async () => {
                         if (!certificateRef.current) return;
                         const canvas = await html2canvas(certificateRef.current, {
                           backgroundColor: '#fff',
-                          scale: 2, // higher quality PNG
+                          scale: 2,
                         });
                         const url = canvas.toDataURL("image/png");
                         const link = document.createElement("a");
@@ -231,11 +231,33 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                     </Button>
                   </>
                 )}
+                <Button
+                  className="mt-4 w-full"
+                  onClick={() => {
+                    setShowResults(false);
+                    setQuizCompleted(false);
+                    onComplete(score);
+                  }}
+                >
+                  Back to Course
+                </Button>
               </div>
             ) : (
-              <p className="text-red-600">
-                You need at least 80% to earn a certificate. Please retake the quiz to improve your score.
-              </p>
+              <>
+                <p className="text-red-600">
+                  You need at least 80% to earn a certificate. Please retake the quiz to improve your score.
+                </p>
+                <Button
+                  className="mt-4 w-full"
+                  onClick={() => {
+                    setShowResults(false);
+                    setQuizCompleted(false);
+                    onComplete(score);
+                  }}
+                >
+                  Back to Course
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>
