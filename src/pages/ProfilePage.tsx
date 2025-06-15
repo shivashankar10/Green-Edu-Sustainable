@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -66,7 +65,10 @@ const ProfilePage = () => {
       email: user.email,
     });
     setSaving(false);
-    if (!error) setSuccess(true);
+    if (!error) {
+      setSuccess(true);
+      navigate("/");
+    }
   };
 
   return (
