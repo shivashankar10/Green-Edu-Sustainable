@@ -37,7 +37,6 @@ const CompletedCoursesSection = () => {
       .select(
         `
         completed,
-        score,
         course_id,
         courses (
           id,
@@ -46,22 +45,35 @@ const CompletedCoursesSection = () => {
           duration
         ),
         certificate_verifications (
-          certificate_code
+          certificate_code,
+          score
         )
       `
       )
       .eq("user_id", user?.id)
       .eq("completed", true);
 
-    // Flatten the data for easier use
+    if (error) {
+      setCompletedCourses([]);
+      setLoading(false);
+      return;
+    }
+
+    // Defensive: Only include enrollments with a certificate and passing score (>=80)
     const result = (data || [])
-      .filter((enrollment) => enrollment.score >= 80 && enrollment.completed)
-      .map((enrollment) => ({
+      .filter(
+        (enrollment: any) =>
+          enrollment.completed === true &&
+          enrollment.certificate_verifications &&
+          typeof enrollment.certificate_verifications.score === "number" &&
+          enrollment.certificate_verifications.score >= 80
+      )
+      .map((enrollment: any) => ({
         id: enrollment.courses?.id || "",
         title: enrollment.courses?.title || "Untitled",
-        lessons: enrollment.courses?.lessons || 0,
-        duration: enrollment.courses?.duration || "",
-        score: enrollment.score,
+        lessons: enrollment.courses?.lessons ?? 0,
+        duration: enrollment.courses?.duration ?? "",
+        score: enrollment.certificate_verifications?.score ?? 0,
         completed: enrollment.completed,
         certificate_code: enrollment.certificate_verifications?.certificate_code,
       }));
@@ -107,4 +119,3 @@ const CompletedCoursesSection = () => {
 };
 
 export default CompletedCoursesSection;
-
