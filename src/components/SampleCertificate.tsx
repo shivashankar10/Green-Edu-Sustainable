@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { QrCode } from 'lucide-react';
 
 interface SampleCertificateProps {
   courseTitle: string;
@@ -29,6 +30,11 @@ const SampleCertificate = ({
   if (!completed || score < 80) {
     return null;
   }
+
+  // Generate verification URL for QR code
+  const verificationUrl = certificateCode ? 
+    `${window.location.origin}/verify-certificate?code=${certificateCode}` : 
+    `${window.location.origin}/verify-certificate`;
 
   return (
     <div className="bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto">
@@ -61,7 +67,7 @@ const SampleCertificate = ({
           <p className="text-lg text-gray-700">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
         </div>
 
-        {/* Footer */}
+        {/* Footer with QR Code */}
         <div className="flex justify-between items-end pt-8 border-t border-gray-300">
           <div className="text-left">
             <p className="text-sm text-gray-500">Date of Completion</p>
@@ -69,9 +75,17 @@ const SampleCertificate = ({
           </div>
           
           {certificateCode && (
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Certificate ID</p>
-              <p className="font-mono text-sm">{certificateCode}</p>
+            <div className="text-center space-y-2">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 border-2 border-gray-400 flex items-center justify-center bg-gray-50">
+                  <QrCode className="w-12 h-12 text-gray-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Scan to Verify</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Certificate ID</p>
+                <p className="font-mono text-sm">{certificateCode}</p>
+              </div>
             </div>
           )}
           

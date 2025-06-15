@@ -1,3 +1,4 @@
+
 export const generateCertificateCanvas = (
   certificateData: any,
   courseTitle: string,
@@ -131,11 +132,38 @@ export const generateCertificateCanvas = (
   });
   ctx.font = '14px Arial';
   ctx.fillStyle = '#666666';
-  ctx.fillText(currentDate, canvas.width / 2, canvas.height - 120);
+  ctx.fillText(currentDate, 200, canvas.height - 120);
+
+  // QR Code placeholder (simple square with border)
+  const qrSize = 60;
+  const qrX = canvas.width - 150;
+  const qrY = canvas.height - 140;
+  
+  // Draw QR code border
+  ctx.strokeStyle = '#333333';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+  
+  // Simple QR code pattern (placeholder)
+  ctx.fillStyle = '#333333';
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if ((i + j) % 2 === 0) {
+        ctx.fillRect(qrX + i * 7 + 2, qrY + j * 7 + 2, 5, 5);
+      }
+    }
+  }
+
+  // QR Code label
+  ctx.font = '10px Arial';
+  ctx.fillStyle = '#666666';
+  ctx.textAlign = 'center';
+  ctx.fillText('Scan to Verify', qrX + qrSize/2, qrY + qrSize + 15);
 
   // Certificate code
   ctx.font = '12px Arial';
   ctx.fillStyle = '#888888';
+  ctx.textAlign = 'center';
   ctx.fillText(`Certificate Code: ${certificateData.certificate_code}`, canvas.width / 2, canvas.height - 100);
 
   // Platform name
