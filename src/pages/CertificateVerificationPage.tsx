@@ -50,13 +50,17 @@ const CertificateVerificationPage = () => {
     setIsVerified(!!result);
 
     if (result) {
-      // Fetch user profile for the certificate holder
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', result.user_id)
-        .single();
-      setUserProfile(profile);
+      // Fetch user profile for the certificate holder only if no full_name attached to cert
+      if (!result.full_name) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', result.user_id)
+          .single();
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
     }
   };
 
@@ -117,7 +121,9 @@ const CertificateVerificationPage = () => {
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-700">Student:</span>
                         <span className="text-gray-900">
-                          {userProfile?.full_name || 'Name not available'}
+                          {verificationResult.full_name ||
+                            userProfile?.full_name ||
+                            'Name not available'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

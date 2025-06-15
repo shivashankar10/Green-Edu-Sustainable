@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           certificate_code: string
           course_id: string
+          full_name: string | null
           id: string
           issued_at: string
           last_verified_at: string | null
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           certificate_code: string
           course_id: string
+          full_name?: string | null
           id?: string
           issued_at?: string
           last_verified_at?: string | null
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           certificate_code?: string
           course_id?: string
+          full_name?: string | null
           id?: string
           issued_at?: string
           last_verified_at?: string | null

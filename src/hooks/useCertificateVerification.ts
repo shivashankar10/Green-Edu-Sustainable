@@ -1,9 +1,12 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 export const useCertificateVerification = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [loading, setLoading] = useState(false);
 
   // Defensive: validates certificate code string
@@ -11,7 +14,8 @@ export const useCertificateVerification = () => {
     return /^CERT-\d{6,}-[A-Z0-9]{5,}$/.test(code.trim());
   }
 
-  const generateCertificateCode = async (courseId: string, score: number) => {
+  // Accepts extra options to pass user's name for record
+  const generateCertificateCode = async (courseId: string, score: number, options?: { full_name?: string }) => {
     if (!user) return null;
 
     // Defensive: Only allow if valid user, course, score range (0-100)
@@ -33,14 +37,26 @@ export const useCertificateVerification = () => {
       const randPart = Math.random().toString(36).substring(2, 8).toUpperCase();
       const certificateCode = `CERT-${tsPart}-${randPart}`;
 
-      // Insert certificate verification record
+      // Determine the user's name to save now
+      let fullNameToStore = options?.full_name;
+      // If not passed in options, fallback to profile or auth
+      if (!fullNameToStore) {
+        fullNameToStore =
+          profile?.full_name ||
+          user?.user_metadata?.full_name ||
+          user?.email?.split('@')[0] ||
+          'Student';
+      }
+
+      // Insert certificate verification record, including the name!
       const { data, error } = await supabase
         .from('certificate_verifications')
         .insert([{
           user_id: user.id,
           course_id: courseId,
           certificate_code: certificateCode,
-          score: score
+          score: score,
+          full_name: fullNameToStore
         }])
         .select()
         .single();
