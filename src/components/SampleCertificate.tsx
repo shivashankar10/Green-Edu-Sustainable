@@ -2,7 +2,6 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { QrCode } from 'lucide-react';
 
 // Change this to your own logo if available!
 const LOGO_URL = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=256&h=256&fit=crop";
@@ -36,11 +35,6 @@ const SampleCertificate = ({
   if (!completed || score < 80) {
     return null;
   }
-
-  // Generate verification URL for QR code
-  const verificationUrl = certificateCode ?
-    `${window.location.origin}/verify-certificate?code=${certificateCode}` :
-    `${window.location.origin}/verify-certificate`;
 
   return (
     <div 
@@ -138,26 +132,15 @@ const SampleCertificate = ({
             <p className="text-xl text-gray-700 px-8">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
           </div>
 
-          {/* Right side - QR Code and Certificate ID */}
+          {/* Right side - Certificate ID only */}
           <div className="flex flex-col items-center space-y-6 px-8">
             {certificateCode && (
-              <>
-                {/* QR Code */}
-                <div className="text-center space-y-2">
-                  <div className="w-32 h-32 border-2 border-gray-400 flex items-center justify-center bg-gray-50">
-                    <QrCode className="w-24 h-24 text-gray-600" />
-                  </div>
-                  <p className="text-sm text-gray-500">Scan to Verify</p>
-                </div>
-                
-                {/* Certificate ID */}
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">Certificate ID</p>
-                  <p className="font-mono text-lg font-semibold text-black bg-gray-100 px-4 py-2 rounded border">
-                    {certificateCode}
-                  </p>
-                </div>
-              </>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Certificate ID</p>
+                <p className="font-mono text-lg font-semibold text-black bg-gray-100 px-4 py-2 rounded border">
+                  {certificateCode}
+                </p>
+              </div>
             )}
           </div>
         </div>
