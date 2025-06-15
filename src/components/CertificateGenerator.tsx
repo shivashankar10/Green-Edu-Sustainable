@@ -45,6 +45,7 @@ const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, co
     }
   };
 
+  // Only show certificate if completed and score is 80% or higher
   if (!completed || score < 80) {
     return null;
   }

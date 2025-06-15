@@ -13,7 +13,7 @@ import CertificateGenerator from './CertificateGenerator';
 const createMockQuiz = (courseTitle: string) => ({
   title: `${courseTitle} Quiz`,
   course_title: courseTitle,
-  time_limit: 600, // 10 minutes
+  time_limit: 150, // 15 seconds per question * 10 questions
   lessons: 10,
   questions: [
     {
@@ -74,48 +74,52 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
   const [actualQuiz, setActualQuiz] = useState(quiz);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(15); // 15 seconds per question
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
   const { toast } = useToast();
   
   // Initialize quiz data
   useEffect(() => {
     if (!quiz) {
-      // Create a mock quiz with a generic title
       setActualQuiz(createMockQuiz("Course"));
     } else {
       setActualQuiz(quiz);
     }
   }, [quiz]);
 
-  // Update time limit when actual quiz is set
+  // Question timer effect - auto advance to next question
   useEffect(() => {
-    if (actualQuiz?.time_limit) {
-      setTimeLeft(actualQuiz.time_limit);
-    }
-  }, [actualQuiz]);
-
-  // Timer effect
-  useEffect(() => {
-    if (completed || timeLeft <= 0 || !actualQuiz) return;
+    if (!quizStarted || completed || !actualQuiz) return;
     
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setQuestionTimeLeft(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
-          if (!completed) {
+          // Auto advance to next question when time runs out
+          if (currentQuestionIndex < actualQuiz.questions.length - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            return 15; // Reset timer for next question
+          } else {
+            // Quiz completed
             handleSubmitQuiz();
+            return 0;
           }
-          return 0;
         }
         return prev - 1;
       });
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [timeLeft, completed, actualQuiz]);
+  }, [quizStarted, completed, actualQuiz, currentQuestionIndex]);
+
+  // Reset timer when question changes
+  useEffect(() => {
+    if (quizStarted) {
+      setQuestionTimeLeft(15);
+    }
+  }, [currentQuestionIndex, quizStarted]);
 
   // NOW we can do the conditional rendering after all hooks are declared
   if (!actualQuiz || !actualQuiz.questions) {
@@ -136,29 +140,20 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
   const totalQuestions = actualQuiz.questions.length;
   const currentQuestion = actualQuiz.questions[currentQuestionIndex];
   
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-  
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswers({
       ...selectedAnswers,
       [currentQuestionIndex]: answer
     });
-  };
-  
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-  };
-  
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
+    
+    // Auto advance to next question after selecting answer
+    setTimeout(() => {
+      if (currentQuestionIndex < totalQuestions - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        handleSubmitQuiz();
+      }
+    }, 500); // Small delay to show selection
   };
   
   const calculateScore = () => {
@@ -174,16 +169,6 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
   };
   
   const handleSubmitQuiz = () => {
-    // Check if all questions are answered
-    if (Object.keys(selectedAnswers).length < totalQuestions) {
-      toast({
-        title: "Warning",
-        description: "You haven't answered all questions. Are you sure you want to submit?",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const finalScore = calculateScore();
     setScore(finalScore);
     setCompleted(true);
@@ -192,12 +177,48 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
     // Call the onComplete callback with the score
     onComplete(finalScore);
   };
+
+  const handleStartQuiz = () => {
+    setQuizStarted(true);
+    setQuestionTimeLeft(15);
+  };
   
   const getProgressColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
     if (score >= 60) return "bg-yellow-500";
     return "bg-red-500";
   };
+
+  // Quiz start screen
+  if (!quizStarted && !completed) {
+    return (
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl">{actualQuiz.title}</CardTitle>
+          <CardDescription>
+            Get ready for your quiz! You'll have 15 seconds per question.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 className="font-semibold text-yellow-800 mb-2">Quiz Instructions:</h3>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• Each question has a 15-second time limit</li>
+              <li>• Questions advance automatically after selection or timeout</li>
+              <li>• No going back to previous questions</li>
+              <li>• You need 80% or higher to earn a certificate</li>
+              <li>• Total questions: {totalQuestions}</li>
+            </ul>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleStartQuiz} className="w-full bg-green-600 hover:bg-green-700">
+            Start Quiz
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
   
   if (showResults) {
     return (
@@ -214,13 +235,13 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
               <div className="text-center">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-2" />
                 <p className="text-xl font-bold text-green-700">Congratulations!</p>
-                <p className="text-gray-600">You passed the quiz</p>
+                <p className="text-gray-600">You passed the quiz and earned a certificate!</p>
               </div>
             ) : (
               <div className="text-center">
                 <XCircle className="h-16 w-16 text-red-500 mx-auto mb-2" />
                 <p className="text-xl font-bold text-red-700">Not quite there</p>
-                <p className="text-gray-600">You need 80% to pass</p>
+                <p className="text-gray-600">You need 80% or higher to earn a certificate</p>
               </div>
             )}
           </div>
@@ -258,17 +279,22 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
               </div>
             ))}
           </div>
+
+          {/* Show certificate if score >= 80% */}
+          {score >= 80 && (
+            <CertificateGenerator
+              courseId={courseId}
+              courseTitle={actualQuiz.course_title || "Course"}
+              lessons={actualQuiz.lessons || 10}
+              hours={4}
+              score={score}
+              completed={true}
+            />
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button 
-            onClick={() => setShowResults(false)}
-            variant="outline"
-            className="mr-2"
-          >
-            Review Quiz
-          </Button>
           <Button onClick={() => window.location.reload()}>
-            Restart Quiz
+            Retake Quiz
           </Button>
         </CardFooter>
       </Card>
@@ -277,74 +303,40 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
   
   return (
     <div className="space-y-6">
-      {!completed ? (
-        <Card className="w-full max-w-3xl mx-auto">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>{actualQuiz.title}</CardTitle>
-              <div className="flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full">
-                <Timer className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">{formatTime(timeLeft)}</span>
-              </div>
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>{actualQuiz.title}</CardTitle>
+            <div className="flex items-center bg-red-100 text-red-800 px-3 py-1 rounded-full">
+              <Timer className="h-4 w-4 mr-1" />
+              <span className="text-sm font-medium">{questionTimeLeft}s</span>
             </div>
-            <CardDescription>
-              Question {currentQuestionIndex + 1} of {totalQuestions}
-            </CardDescription>
-            <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="h-1" />
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
-              <RadioGroup 
-                value={selectedAnswers[currentQuestionIndex] || ""}
-                onValueChange={handleAnswerSelect}
-                className="space-y-3"
-              >
-                {currentQuestion.options.map((option: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50">
-                    <RadioGroupItem value={option} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button 
-              onClick={handlePrevQuestion}
-              variant="outline"
-              disabled={currentQuestionIndex === 0}
+          </div>
+          <CardDescription>
+            Question {currentQuestionIndex + 1} of {totalQuestions}
+          </CardDescription>
+          <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="h-2" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
+            <RadioGroup 
+              value={selectedAnswers[currentQuestionIndex] || ""}
+              onValueChange={handleAnswerSelect}
+              className="space-y-3"
             >
-              Previous
-            </Button>
-            <div className="flex gap-2">
-              {currentQuestionIndex === totalQuestions - 1 ? (
-                <Button onClick={handleSubmitQuiz}>
-                  Submit Quiz
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleNextQuestion}
-                  disabled={!selectedAnswers[currentQuestionIndex]}
-                >
-                  Next Question
-                </Button>
-              )}
-            </div>
-          </CardFooter>
-        </Card>
-      ) : (
-        <CertificateGenerator
-          courseId={courseId}
-          courseTitle={actualQuiz.course_title || "Course"}
-          lessons={actualQuiz.lessons || 10}
-          hours={4}
-          score={score}
-          completed={true}
-        />
-      )}
+              {currentQuestion.options.map((option: string, index: number) => (
+                <div key={index} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                  <RadioGroupItem value={option} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

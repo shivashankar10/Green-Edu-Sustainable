@@ -7,6 +7,7 @@ export const useCertificateData = (courseId: string, score: number, completed: b
   const { generateCertificateCode } = useCertificateVerification();
 
   useEffect(() => {
+    // Only generate certificate if score is 80% or higher
     if (completed && score >= 80 && !certificateData) {
       generateCertificate();
     }
