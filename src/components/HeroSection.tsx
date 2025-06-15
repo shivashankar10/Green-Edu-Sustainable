@@ -66,7 +66,15 @@ const HeroSection = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Earn Your Certificate</h3>
                 <p className="text-sm text-gray-600">Complete courses and showcase your sustainability knowledge</p>
               </div>
-              <SampleCertificate />
+              {/* Demo certificate sample props */}
+              <SampleCertificate
+                courseTitle="Sustainable Agriculture Practices"
+                lessons={12}
+                hours={6}
+                score={95}
+                completed={true}
+                certificateCode="CERT-0001-ABCD"
+              />
             </div>
             
             {/* Background decoration */}
