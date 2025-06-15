@@ -7,7 +7,7 @@ import { CheckCircle, XCircle, Calendar, Trophy, BookOpen, Clock } from 'lucide-
 import { useCertificateVerification } from '@/hooks/useCertificateVerification';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'react-toastify';
+import { toast } from '@/hooks/use-toast';
 
 const CertificateVerificationPage = () => {
   const [searchParams] = useSearchParams();
