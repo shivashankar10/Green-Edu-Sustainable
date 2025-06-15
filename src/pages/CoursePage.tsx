@@ -115,7 +115,12 @@ const CoursePage = () => {
 
   const handleQuizComplete = (score: number) => {
     setShowQuiz(false);
-    // Additional logic can be added here if needed
+    
+    toast({
+      title: "Quiz Completed!",
+      description: `You scored ${score}%. ${score >= 80 ? 'Congratulations!' : 'Try again to improve your score.'}`,
+      variant: score >= 80 ? "default" : "destructive"
+    });
   };
 
   if (loading) {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,17 +9,112 @@ import { CheckCircle, XCircle, Timer, Award } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import CertificateGenerator from './CertificateGenerator';
 
+// Mock quiz data as fallback
+const createMockQuiz = (courseTitle: string) => ({
+  title: `${courseTitle} Quiz`,
+  course_title: courseTitle,
+  time_limit: 600, // 10 minutes
+  lessons: 10,
+  questions: [
+    {
+      question: "What is the main focus of sustainable development?",
+      options: [
+        "Economic growth only",
+        "Environmental protection only", 
+        "Balancing economic, social, and environmental needs",
+        "Population control"
+      ],
+      correct_answer: "Balancing economic, social, and environmental needs"
+    },
+    {
+      question: "Which of the following is a renewable energy source?",
+      options: [
+        "Coal",
+        "Natural gas",
+        "Solar energy",
+        "Nuclear energy"
+      ],
+      correct_answer: "Solar energy"
+    },
+    {
+      question: "What does the term 'carbon footprint' refer to?",
+      options: [
+        "The size of your shoes",
+        "The amount of carbon dioxide produced by activities",
+        "The number of trees planted",
+        "The weight of carbon materials"
+      ],
+      correct_answer: "The amount of carbon dioxide produced by activities"
+    },
+    {
+      question: "Which practice helps reduce waste?",
+      options: [
+        "Single-use plastics",
+        "Recycling and reusing materials",
+        "Burning waste",
+        "Buying more products"
+      ],
+      correct_answer: "Recycling and reusing materials"
+    },
+    {
+      question: "What is biodiversity?",
+      options: [
+        "The variety of life forms in an ecosystem",
+        "The study of biology",
+        "A type of renewable energy",
+        "A method of farming"
+      ],
+      correct_answer: "The variety of life forms in an ecosystem"
+    }
+  ]
+});
+
 export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string; quiz: any; onComplete: (score: number) => void }) => {
+  // If no quiz is provided, create a mock quiz
+  const [actualQuiz, setActualQuiz] = useState(quiz);
+  
+  useEffect(() => {
+    if (!quiz) {
+      // Create a mock quiz with a generic title
+      setActualQuiz(createMockQuiz("Course"));
+    } else {
+      setActualQuiz(quiz);
+    }
+  }, [quiz]);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState(quiz.time_limit || 600); // Default 10 minutes
+  const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
 
-  const totalQuestions = quiz.questions.length;
-  const currentQuestion = quiz.questions[currentQuestionIndex];
+  // Update time limit when actual quiz is set
+  useEffect(() => {
+    if (actualQuiz?.time_limit) {
+      setTimeLeft(actualQuiz.time_limit);
+    }
+  }, [actualQuiz]);
+
+  // Early return if no quiz data is available yet
+  if (!actualQuiz || !actualQuiz.questions) {
+    return (
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle>Loading Quiz...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center p-8">
+            <div>Please wait while the quiz loads...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const totalQuestions = actualQuiz.questions.length;
+  const currentQuestion = actualQuiz.questions[currentQuestionIndex];
   
   // Timer effect
   useEffect(() => {
@@ -68,7 +164,7 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
   const calculateScore = () => {
     let correctAnswers = 0;
     
-    quiz.questions.forEach((question: any, index: number) => {
+    actualQuiz.questions.forEach((question: any, index: number) => {
       if (selectedAnswers[index] === question.correct_answer) {
         correctAnswers++;
       }
@@ -139,7 +235,7 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
           
           <div className="space-y-4">
             <h3 className="font-medium">Question Summary:</h3>
-            {quiz.questions.map((question: any, index: number) => (
+            {actualQuiz.questions.map((question: any, index: number) => (
               <div key={index} className="border rounded-md p-3">
                 <p className="font-medium">{question.question}</p>
                 <div className="flex items-center mt-2">
@@ -185,7 +281,7 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
         <Card className="w-full max-w-3xl mx-auto">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>{quiz.title}</CardTitle>
+              <CardTitle>{actualQuiz.title}</CardTitle>
               <div className="flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full">
                 <Timer className="h-4 w-4 mr-1" />
                 <span className="text-sm font-medium">{formatTime(timeLeft)}</span>
@@ -242,8 +338,8 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
       ) : (
         <CertificateGenerator
           courseId={courseId}
-          courseTitle={quiz.course_title || "Course"}
-          lessons={quiz.lessons || 10}
+          courseTitle={actualQuiz.course_title || "Course"}
+          lessons={actualQuiz.lessons || 10}
           hours={4}
           score={score}
           completed={true}
