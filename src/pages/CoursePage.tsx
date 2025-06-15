@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import QuizComponent from '@/components/QuizComponent';
 import EnrolledCoursesList from '@/components/EnrolledCoursesList';
+import CertificateGenerator from '@/components/CertificateGenerator';
 
 const CoursePage = () => {
   const { id } = useParams();
@@ -167,6 +168,21 @@ const CoursePage = () => {
       <Header />
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Certificate at top middle */}
+          <div className="flex justify-center mb-10">
+            {/* Only show if enrolled, completed, and passed */}
+            {enrollment && enrollment.completed && enrollment.score >= 80 && (
+              <CertificateGenerator
+                courseId={course.id}
+                courseTitle={course.title}
+                lessons={course.lessons}
+                hours={course.duration}
+                score={enrollment.score}
+                completed={enrollment.completed}
+              />
+            )}
+          </div>
+
           {/* Back Button */}
           <div className="mb-6">
             <Button 
