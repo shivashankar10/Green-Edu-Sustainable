@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit, Trash2, Users, BookOpen, MessageSquare, Shield, Upload, Video } from 'lucide-react';
+import QuizManagement from '@/components/QuizManagement';
 
 const AdminPage = () => {
   const { user } = useAuth();
@@ -324,8 +325,9 @@ const AdminPage = () => {
           </div>
 
           <Tabs defaultValue="courses" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="courses">Courses</TabsTrigger>
+              <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
@@ -508,6 +510,10 @@ const AdminPage = () => {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="quizzes" className="space-y-6">
+              <QuizManagement />
             </TabsContent>
 
             <TabsContent value="enrollments" className="space-y-6">
