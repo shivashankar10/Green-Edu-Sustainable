@@ -70,9 +70,17 @@ const createMockQuiz = (courseTitle: string) => ({
 });
 
 export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string; quiz: any; onComplete: (score: number) => void }) => {
-  // If no quiz is provided, create a mock quiz
+  // All hooks must be declared at the top level, before any conditional logic
   const [actualQuiz, setActualQuiz] = useState(quiz);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+  const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes
+  const [completed, setCompleted] = useState(false);
+  const [score, setScore] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const { toast } = useToast();
   
+  // Initialize quiz data
   useEffect(() => {
     if (!quiz) {
       // Create a mock quiz with a generic title
@@ -82,14 +90,6 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
     }
   }, [quiz]);
 
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes
-  const [completed, setCompleted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const { toast } = useToast();
-
   // Update time limit when actual quiz is set
   useEffect(() => {
     if (actualQuiz?.time_limit) {
@@ -97,7 +97,27 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
     }
   }, [actualQuiz]);
 
-  // Early return if no quiz data is available yet
+  // Timer effect
+  useEffect(() => {
+    if (completed || timeLeft <= 0 || !actualQuiz) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          if (!completed) {
+            handleSubmitQuiz();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft, completed, actualQuiz]);
+
+  // NOW we can do the conditional rendering after all hooks are declared
   if (!actualQuiz || !actualQuiz.questions) {
     return (
       <Card className="w-full max-w-3xl mx-auto">
@@ -115,26 +135,6 @@ export const QuizComponent = ({ courseId, quiz, onComplete }: { courseId: string
 
   const totalQuestions = actualQuiz.questions.length;
   const currentQuestion = actualQuiz.questions[currentQuestionIndex];
-  
-  // Timer effect
-  useEffect(() => {
-    if (completed || timeLeft <= 0) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          if (!completed) {
-            handleSubmitQuiz();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [timeLeft, completed]);
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
