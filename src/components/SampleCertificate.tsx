@@ -77,7 +77,7 @@ const SampleCertificate = ({
         <p className="text-gray-600 text-sm">This is to certify that</p>
         
         <div className="bg-green-50 p-3 rounded-lg">
-          <p className="text-xl font-bold text-green-800">{displayedName}</p>
+          <p className="text-xl font-bold text-green-800" data-user-name>{displayedName}</p>
         </div>
         
         <p className="text-gray-600 text-sm">has successfully completed</p>

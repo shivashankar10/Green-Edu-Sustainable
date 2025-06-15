@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { CheckCircle, X, Award, RotateCcw } from 'lucide-react';
+import CertificateGenerator from './CertificateGenerator';
 
 interface QuizQuestion {
   id: string;
@@ -27,10 +29,27 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const [score, setScore] = useState(0);
+  const [courseDetails, setCourseDetails] = useState<any>(null);
 
   useEffect(() => {
     fetchQuestions();
+    fetchCourseDetails();
   }, [courseId]);
+
+  const fetchCourseDetails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('title, lessons, duration')
+        .eq('id', courseId)
+        .single();
+
+      if (error) throw error;
+      setCourseDetails(data);
+    } catch (error) {
+      console.error('Error fetching course details:', error);
+    }
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -117,9 +136,21 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
 
       if (error) throw error;
 
+      // Update course enrollment progress to 100% if score is 80% or higher
+      if (finalScore >= 80) {
+        await supabase
+          .from('course_enrollments')
+          .update({ 
+            progress: 100,
+            completed: true 
+          })
+          .eq('user_id', user?.id)
+          .eq('course_id', courseId);
+      }
+
       toast({
         title: "Quiz completed!",
-        description: `You scored ${finalScore}%. Your results have been saved.`
+        description: `You scored ${finalScore}%. ${finalScore >= 80 ? 'Congratulations! You can now download your certificate.' : 'You need 80% or higher to get a certificate.'}`
       });
     } catch (error) {
       console.error('Error saving quiz results:', error);
@@ -138,6 +169,12 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
     setSelectedAnswers(new Array(questions.length).fill(-1));
     setShowResults(false);
     setScore(0);
+  };
+
+  // Extract hours from duration string (e.g., "4 hours" -> 4)
+  const getHoursFromDuration = (duration: string) => {
+    const match = duration?.match(/(\d+)\s*hours?/i);
+    return match ? parseInt(match[1]) : 4;
   };
 
   if (loading) {
@@ -161,11 +198,29 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">{score}%</div>
+            <div className={`text-4xl font-bold mb-2 ${score >= 80 ? 'text-green-600' : 'text-orange-600'}`}>
+              {score}%
+            </div>
             <p className="text-gray-600">
               You answered {questions.filter((_, index) => selectedAnswers[index] === questions[index].correct_answer).length} out of {questions.length} questions correctly.
             </p>
+            {score >= 80 && (
+              <p className="text-green-600 font-semibold mt-2">
+                🎉 Congratulations! You passed the quiz and earned a certificate!
+              </p>
+            )}
           </div>
+
+          {/* Certificate Generation */}
+          {score >= 80 && courseDetails && (
+            <CertificateGenerator
+              courseTitle={courseDetails.title}
+              lessons={courseDetails.lessons || 12}
+              hours={getHoursFromDuration(courseDetails.duration)}
+              score={score}
+              completed={true}
+            />
+          )}
 
           <div className="space-y-4">
             {questions.map((question, index) => (
