@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, X, Award, RotateCcw } from 'lucide-react';
+import { CheckCircle, X, Award, RotateCcw, Clock } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 
 interface QuizQuestion {
@@ -30,11 +30,40 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
   const [loading, setLoading] = useState(true);
   const [score, setScore] = useState(0);
   const [courseDetails, setCourseDetails] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchQuestions();
     fetchCourseDetails();
   }, [courseId]);
+
+  // Timer effect
+  useEffect(() => {
+    if (isTimerActive && timeLeft > 0 && !showResults) {
+      timerRef.current = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !showResults) {
+      // Auto move to next question when timer expires
+      handleNext();
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [timeLeft, isTimerActive, showResults]);
+
+  // Start timer when component loads and questions are available
+  useEffect(() => {
+    if (questions.length > 0 && !showResults) {
+      setIsTimerActive(true);
+      setTimeLeft(15);
+    }
+  }, [questions, currentQuestion, showResults]);
 
   const fetchCourseDetails = async () => {
     try {
@@ -99,8 +128,16 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
   };
 
   const handleNext = () => {
+    // Clear the timer
+    setIsTimerActive(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setTimeLeft(15); // Reset timer for next question
+      setIsTimerActive(true);
     } else {
       submitQuiz();
     }
@@ -108,11 +145,25 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      // Clear the timer
+      setIsTimerActive(false);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      
       setCurrentQuestion(currentQuestion - 1);
+      setTimeLeft(15); // Reset timer
+      setIsTimerActive(true);
     }
   };
 
   const submitQuiz = async () => {
+    // Stop the timer
+    setIsTimerActive(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
     let correctAnswers = 0;
     questions.forEach((question, index) => {
       if (selectedAnswers[index] === question.correct_answer) {
@@ -169,6 +220,8 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
     setSelectedAnswers(new Array(questions.length).fill(-1));
     setShowResults(false);
     setScore(0);
+    setTimeLeft(15);
+    setIsTimerActive(true);
   };
 
   // Extract hours from duration string (e.g., "4 hours" -> 4)
@@ -222,36 +275,6 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
             />
           )}
 
-          <div className="space-y-4">
-            {questions.map((question, index) => (
-              <div key={question.id} className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">{index + 1}. {question.question}</h4>
-                <div className="space-y-2">
-                  {question.options.map((option, optionIndex) => (
-                    <div 
-                      key={optionIndex}
-                      className={`p-2 rounded flex items-center ${
-                        optionIndex === question.correct_answer 
-                          ? 'bg-green-100 text-green-800' 
-                          : selectedAnswers[index] === optionIndex 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-gray-50'
-                      }`}
-                    >
-                      {optionIndex === question.correct_answer && (
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                      )}
-                      {selectedAnswers[index] === optionIndex && optionIndex !== question.correct_answer && (
-                        <X className="h-4 w-4 mr-2" />
-                      )}
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
           <div className="flex space-x-4">
             <Button onClick={resetQuiz} variant="outline" className="flex-1">
               <RotateCcw className="h-4 w-4 mr-2" />
@@ -278,15 +301,35 @@ const QuizComponent = ({ courseId, onClose }: QuizComponentProps) => {
             <X className="h-4 w-4" />
           </Button>
         </div>
+        
+        {/* Timer Display */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-gray-500" />
+            <span className={`font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-gray-700'}`}>
+              {timeLeft}s
+            </span>
+          </div>
+          <p className="text-sm text-gray-600">
+            Question {currentQuestion + 1} of {questions.length}
+          </p>
+        </div>
+
+        {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-green-600 h-2 rounded-full transition-all duration-300" 
             style={{ width: `${progress}%` }}
           ></div>
         </div>
-        <p className="text-sm text-gray-600">
-          Question {currentQuestion + 1} of {questions.length}
-        </p>
+
+        {/* Timer Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+          <div 
+            className={`h-1 rounded-full transition-all duration-1000 ${timeLeft <= 5 ? 'bg-red-500' : 'bg-blue-500'}`}
+            style={{ width: `${(timeLeft / 15) * 100}%` }}
+          ></div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
