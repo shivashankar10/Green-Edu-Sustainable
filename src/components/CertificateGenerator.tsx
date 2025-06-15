@@ -1,10 +1,13 @@
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, QrCode } from 'lucide-react';
 import SampleCertificate from './SampleCertificate';
+import { useCertificateVerification } from '@/hooks/useCertificateVerification';
+import QRCode from 'qrcode';
 
 interface CertificateGeneratorProps {
+  courseId: string;
   courseTitle: string;
   lessons: number;
   hours: number;
@@ -12,11 +15,39 @@ interface CertificateGeneratorProps {
   completed: boolean;
 }
 
-const CertificateGenerator = ({ courseTitle, lessons, hours, score, completed }: CertificateGeneratorProps) => {
+const CertificateGenerator = ({ courseId, courseTitle, lessons, hours, score, completed }: CertificateGeneratorProps) => {
   const certificateRef = useRef<HTMLDivElement>(null);
+  const [certificateData, setCertificateData] = useState<any>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const { generateCertificateCode } = useCertificateVerification();
+
+  useEffect(() => {
+    if (completed && score >= 80 && !certificateData) {
+      generateCertificate();
+    }
+  }, [completed, score, courseId]);
+
+  const generateCertificate = async () => {
+    const certData = await generateCertificateCode(courseId, score);
+    if (certData) {
+      setCertificateData(certData);
+      
+      // Generate QR code URL
+      const verificationUrl = `${window.location.origin}/verify-certificate?code=${certData.certificate_code}`;
+      const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#16a34a',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    }
+  };
 
   const downloadCertificate = async () => {
-    if (!certificateRef.current) return;
+    if (!certificateRef.current || !certificateData) return;
 
     try {
       // Create a canvas to convert the certificate to image
@@ -105,27 +136,60 @@ const CertificateGenerator = ({ courseTitle, lessons, hours, score, completed }:
       });
       ctx.font = '14px Arial';
       ctx.fillStyle = '#666666';
-      ctx.fillText(currentDate, canvas.width / 2, canvas.height - 80);
+      ctx.fillText(currentDate, canvas.width / 2, canvas.height - 120);
+
+      // Certificate code
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#888888';
+      ctx.fillText(`Certificate Code: ${certificateData.certificate_code}`, canvas.width / 2, canvas.height - 100);
 
       // Platform name
       ctx.font = 'bold 16px Arial';
       ctx.fillStyle = '#16a34a';
-      ctx.fillText('GreenEdu Platform', canvas.width / 2, canvas.height - 50);
+      ctx.fillText('GreenEdu Platform', canvas.width / 2, canvas.height - 80);
 
-      // Convert canvas to blob and download
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${courseTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_certificate.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 'image/png');
-
+      // Add QR code if available
+      if (qrCodeUrl) {
+        const qrImage = new Image();
+        qrImage.onload = () => {
+          ctx.drawImage(qrImage, canvas.width - 140, canvas.height - 140, 100, 100);
+          
+          // Add QR code label
+          ctx.font = '10px Arial';
+          ctx.fillStyle = '#666666';
+          ctx.textAlign = 'center';
+          ctx.fillText('Scan to verify', canvas.width - 90, canvas.height - 25);
+          
+          // Convert canvas to blob and download
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${courseTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_certificate.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }, 'image/png');
+        };
+        qrImage.src = qrCodeUrl;
+      } else {
+        // Download without QR code
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${courseTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_certificate.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      }
     } catch (error) {
       console.error('Error generating certificate:', error);
     }
@@ -144,16 +208,25 @@ const CertificateGenerator = ({ courseTitle, lessons, hours, score, completed }:
           hours={hours}
           score={score}
           completed={completed}
+          certificateCode={certificateData?.certificate_code}
+          qrCodeUrl={qrCodeUrl}
         />
       </div>
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <Button 
           onClick={downloadCertificate}
           className="bg-green-600 hover:bg-green-700"
+          disabled={!certificateData}
         >
           <Download className="h-4 w-4 mr-2" />
           Download Certificate
         </Button>
+        {qrCodeUrl && (
+          <p className="text-sm text-gray-600">
+            <QrCode className="h-4 w-4 inline mr-1" />
+            Scan the QR code to verify authenticity
+          </p>
+        )}
       </div>
     </div>
   );
