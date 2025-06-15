@@ -32,10 +32,10 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
+  const [timeLeft, setTimeLeft] = useState(15);
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [course, setCourse] = useState<any>(null);
-  const [certificateCode] = useState<string | undefined>(undefined); // Always undefined since not in quiz_attempts
+  const [certificateCode] = useState<string | undefined>(undefined);
   const certificateRef = useRef<HTMLDivElement>(null);
   const [quizCompleted, setQuizCompleted] = useState(false);
 
@@ -52,7 +52,6 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
     } else if (timeLeft === 0 && isQuizActive && !showResults) {
-      // Time's up, move to next question with no answer
       handleNextQuestion();
     }
 
@@ -116,16 +115,14 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   };
 
   const handleNextQuestion = () => {
-    // Record the answer (or -1 if no answer selected)
     const newAnswers = [...userAnswers, selectedAnswer ?? -1];
     setUserAnswers(newAnswers);
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
-      setTimeLeft(15); // Reset timer for next question
+      setTimeLeft(15);
     } else {
-      // Quiz finished
       finishQuiz(newAnswers);
     }
   };
@@ -133,7 +130,6 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const finishQuiz = async (answers: number[]) => {
     setIsQuizActive(false);
     
-    // Calculate score
     let correctCount = 0;
     questions.forEach((question, index) => {
       if (answers[index] === question.correct_answer) {
@@ -145,7 +141,6 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
     setScore(finalScore);
     setShowResults(true);
 
-    // Save quiz attempt (no certificate_code extraction)
     if (user) {
       try {
         await supabase.from('quiz_attempts').insert({
@@ -159,8 +154,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
         console.error('Error saving quiz attempt:', error);
       }
     }
-    setQuizCompleted(true); // newly added: only ready to close after user clicks close
-    // onComplete now gets called only when user leaves result screen
+    setQuizCompleted(true);
   };
 
   if (loading) {
@@ -185,7 +179,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
 
   if (showResults) {
     return (
-      <div className="w-full max-w-6xl mx-auto space-y-6">
+      <div className="w-full max-w-7xl mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-center">Quiz Results</CardTitle>
@@ -202,17 +196,16 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                 </p>
                 {course && (
                   <>
-                    {/* Certificate display area - A4 format */}
-                    <div className="my-6 bg-gray-50 p-4 rounded-lg overflow-auto">
+                    {/* Certificate display area - Real A4 size */}
+                    <div className="my-6 bg-gray-50 p-8 rounded-lg overflow-auto">
                       <div 
                         ref={certificateRef} 
                         className="mx-auto bg-white shadow-lg"
                         style={{
-                          width: '794px', // A4 width at 96 DPI for screen display
-                          height: '1123px', // A4 height at 96 DPI for screen display
-                          transform: 'scale(0.7)',
-                          transformOrigin: 'top center',
-                          marginBottom: '-200px' // Adjust for scale
+                          width: '210mm', // A4 width
+                          height: '297mm', // A4 height
+                          minWidth: '210mm',
+                          minHeight: '297mm',
                         }}
                       >
                         <SampleCertificate
@@ -231,42 +224,29 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                         if (!certificateRef.current) return;
 
                         try {
-                          // Create a clone of the certificate for high-res export
-                          const clonedElement = certificateRef.current.cloneNode(true) as HTMLElement;
-                          
-                          // Set A4 dimensions for high-res export (300 DPI)
-                          clonedElement.style.width = '2480px';
-                          clonedElement.style.height = '3508px';
-                          clonedElement.style.transform = 'none';
-                          clonedElement.style.position = 'absolute';
-                          clonedElement.style.left = '-9999px';
-                          clonedElement.style.top = '0';
-                          
-                          // Temporarily add to DOM
-                          document.body.appendChild(clonedElement);
-                          
-                          // Wait for rendering
-                          await new Promise(resolve => setTimeout(resolve, 100));
-
-                          // Render with html2canvas
-                          const canvas = await html2canvas(clonedElement, {
+                          // Create canvas with high DPI for crisp output
+                          const canvas = await html2canvas(certificateRef.current, {
                             backgroundColor: '#fff',
-                            width: 2480,
-                            height: 3508,
-                            scale: 1,
+                            scale: 3, // High resolution for print quality
                             useCORS: true,
-                            allowTaint: true
+                            allowTaint: true,
+                            width: certificateRef.current.offsetWidth,
+                            height: certificateRef.current.offsetHeight,
                           });
 
-                          // Remove cloned element
-                          document.body.removeChild(clonedElement);
-
-                          // Download
+                          // Download as PNG
                           const url = canvas.toDataURL("image/png", 1.0);
                           const link = document.createElement("a");
                           link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4.png`;
                           link.href = url;
+                          document.body.appendChild(link);
                           link.click();
+                          document.body.removeChild(link);
+
+                          toast({
+                            title: "Success",
+                            description: "Certificate downloaded successfully!",
+                          });
                         } catch (error) {
                           console.error('Error generating certificate:', error);
                           toast({
