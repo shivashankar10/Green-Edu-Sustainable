@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -5,6 +6,9 @@ import { QrCode } from 'lucide-react';
 
 // Change this to your own logo if available!
 const LOGO_URL = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=256&h=256&fit=crop";
+
+// Signature image (user-uploaded)
+const SIGNATURE_URL = "/lovable-uploads/85418616-5153-4340-a52a-9d8756b4b3c3.png";
 
 interface SampleCertificateProps {
   courseTitle: string;
@@ -15,13 +19,13 @@ interface SampleCertificateProps {
   certificateCode?: string;
 }
 
-const SampleCertificate = ({ 
-  courseTitle, 
-  lessons, 
-  hours, 
-  score, 
-  completed, 
-  certificateCode 
+const SampleCertificate = ({
+  courseTitle,
+  lessons,
+  hours,
+  score,
+  completed,
+  certificateCode
 }: SampleCertificateProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -34,8 +38,8 @@ const SampleCertificate = ({
   }
 
   // Generate verification URL for QR code
-  const verificationUrl = certificateCode ? 
-    `${window.location.origin}/verify-certificate?code=${certificateCode}` : 
+  const verificationUrl = certificateCode ?
+    `${window.location.origin}/verify-certificate?code=${certificateCode}` :
     `${window.location.origin}/verify-certificate`;
 
   return (
@@ -109,13 +113,10 @@ const SampleCertificate = ({
         {/* Main Content */}
         <div className="space-y-6">
           <p className="text-lg text-gray-700">This is to certify that</p>
-          
           <div className="border-b-2 border-gray-300 pb-2 mx-auto max-w-md">
             <h2 className="text-3xl font-bold text-black" data-user-name>{userName}</h2>
           </div>
-
           <p className="text-lg text-gray-700">has successfully completed the course</p>
-
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <h3 className="text-2xl font-bold text-green-800 mb-2">{courseTitle}</h3>
             <div className="text-gray-600 space-y-1">
@@ -124,17 +125,16 @@ const SampleCertificate = ({
               <p>Final Score: {score}%</p>
             </div>
           </div>
-
           <p className="text-lg text-gray-700">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
         </div>
 
-        {/* Footer with QR Code */}
+        {/* Footer with QR Code and Signature */}
         <div className="flex justify-between items-end pt-8 border-t border-gray-300">
           <div className="text-left">
             <p className="text-sm text-gray-500">Date of Completion</p>
             <p className="font-semibold">{new Date().toLocaleDateString()}</p>
           </div>
-          
+
           {certificateCode && (
             <div className="text-center space-y-2">
               <div className="flex flex-col items-center">
@@ -149,9 +149,19 @@ const SampleCertificate = ({
               </div>
             </div>
           )}
-          
-          <div className="text-right">
-            <div className="border-b border-gray-400 w-32 mb-1"></div>
+
+          <div className="text-right flex flex-col items-end">
+            {/* Signature image */}
+            <img
+              src={SIGNATURE_URL}
+              alt="Authorized Signature"
+              className="h-16 w-auto object-contain mb-1"
+              style={{
+                maxWidth: 140,
+                filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
+              }}
+              draggable={false}
+            />
             <p className="text-sm text-gray-600">Authorized Signature</p>
           </div>
         </div>
@@ -161,3 +171,4 @@ const SampleCertificate = ({
 };
 
 export default SampleCertificate;
+
