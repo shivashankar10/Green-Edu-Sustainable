@@ -37,14 +37,26 @@ const Header = () => {
 
   const checkAdminStatus = async (userId: string) => {
     try {
-      const { data } = await supabase
+      console.log('Header: Checking admin status for user:', userId);
+      
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
-      setIsAdmin(data?.role === 'admin');
+      console.log('Header: User roles query result:', { data, error });
+
+      if (error) {
+        console.error('Header: Error checking admin status:', error);
+        setIsAdmin(false);
+        return;
+      }
+
+      const hasAdminRole = data?.some(role => role.role === 'admin');
+      console.log('Header: Has admin role:', hasAdminRole);
+      setIsAdmin(hasAdminRole || false);
     } catch (error) {
+      console.error('Header: Exception in checkAdminStatus:', error);
       setIsAdmin(false);
     }
   };
@@ -91,6 +103,13 @@ const Header = () => {
     navigate('/profile');
   }
 
+  // Add handler for navigating to admin page
+  const handleAdmin = () => {
+    setIsOpen(false);
+    console.log('Header: Admin button clicked, navigating to /admin');
+    navigate('/admin');
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-green-100">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -129,7 +148,7 @@ const Header = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => navigate('/admin')} 
+                      onClick={handleAdmin}
                       className="text-purple-600 border-purple-600 hover:bg-purple-50 hover:text-purple-700"
                     >
                       <Shield className="h-4 w-4 mr-2" />
@@ -188,10 +207,7 @@ const Header = () => {
                           <Button 
                             variant="ghost" 
                             className="w-full justify-start text-purple-600 hover:text-purple-700 hover:bg-purple-50 mb-2" 
-                            onClick={() => {
-                              setIsOpen(false);
-                              navigate('/admin');
-                            }}
+                            onClick={handleAdmin}
                           >
                             <Shield className="h-4 w-4 mr-2" />
                             Admin Dashboard
@@ -224,5 +240,3 @@ const Header = () => {
 };
 
 export default Header;
-
-// src/components/Header.tsx is long (over 200 lines). Consider asking me to help you refactor it!

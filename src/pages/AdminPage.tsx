@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Edit, Trash2, Users, BookOpen, MessageSquare, Shield, Upload, Video } from 'lucide-react';
 
 const AdminPage = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -47,12 +47,22 @@ const AdminPage = () => {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
 
   useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-    } else {
-      navigate('/auth');
+    console.log('AdminPage: useEffect triggered', { user, authLoading });
+    
+    if (authLoading) {
+      console.log('AdminPage: Still loading auth...');
+      return;
     }
-  }, [user, navigate]);
+
+    if (!user) {
+      console.log('AdminPage: No user found, redirecting to auth');
+      navigate('/auth');
+      return;
+    }
+
+    console.log('AdminPage: User found, checking admin status for:', user.id);
+    checkAdminStatus();
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -69,16 +79,40 @@ const AdminPage = () => {
   }, [quizCourse]);
 
   const checkAdminStatus = async () => {
+    if (!user) return;
+    
     try {
+      console.log('AdminPage: Checking admin status for user:', user.id);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id);
 
-      if (data?.role === 'admin') {
+      console.log('AdminPage: User roles query result:', { data, error });
+
+      if (error) {
+        console.error('AdminPage: Error fetching user roles:', error);
+        toast({
+          title: "Error",
+          description: "Failed to check admin status.",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      const hasAdminRole = data?.some(role => role.role === 'admin');
+      console.log('AdminPage: Has admin role:', hasAdminRole);
+
+      if (hasAdminRole) {
         setIsAdmin(true);
+        toast({
+          title: "Welcome Admin",
+          description: "You have successfully accessed the admin dashboard.",
+        });
       } else {
+        console.log('AdminPage: User does not have admin role, redirecting');
         toast({
           title: "Access Denied",
           description: "You don't have admin privileges.",
@@ -87,6 +121,12 @@ const AdminPage = () => {
         navigate('/');
       }
     } catch (error) {
+      console.error('AdminPage: Exception in checkAdminStatus:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while checking admin status.",
+        variant: "destructive"
+      });
       navigate('/');
     } finally {
       setLoading(false);
@@ -252,18 +292,33 @@ const AdminPage = () => {
     setEditingQuestion(null);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <div className="pt-20 pb-16 flex items-center justify-center">
-          <div>Loading...</div>
+          <div className="text-lg">Loading admin dashboard...</div>
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="pt-20 pb-16 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+            <p className="text-gray-600 mb-6">You don't have admin privileges to access this page.</p>
+            <Button onClick={() => navigate('/')} className="bg-green-600 hover:bg-green-700">
+              Return to Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
