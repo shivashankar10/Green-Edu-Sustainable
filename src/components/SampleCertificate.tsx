@@ -186,32 +186,35 @@ const SampleCertificate = ({
         </div>
 
         {/* Move Date/Signature section above the footer border */}
-        <div className="flex justify-between items-end pt-6 pb-2">
-          <div className="text-left">
+        <div className="w-full flex justify-between items-end pt-2 pb-2" style={{ marginTop: 8 }}>
+          <div className="text-left mb-8">
             <p className="text-sm text-gray-500">Date of Completion</p>
             <p className="font-semibold text-lg text-black">{completionDate}</p>
           </div>
 
-          <div className="text-right flex flex-col items-end">
+          <div className="text-right flex flex-col items-end mb-8">
             {/* Signature image */}
             <img
               src={SIGNATURE_URL}
               alt="Authorized Signature"
-              className="h-24 w-auto object-contain mb-0"
+              className="h-24 w-auto object-contain mb-1"
               style={{
                 maxWidth: 180,
                 filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
               }}
               draggable={false}
             />
-            {/* Prominent Authorized Signature label */}
-            <p className="text-base font-semibold text-green-900 mt-0" style={{ letterSpacing: "0.02em" }}>
+            {/* Prominent Authorized Signature label, more visible */}
+            <p
+              className="text-base font-bold text-green-900 mt-0 bg-green-50 border border-green-200 rounded px-3 py-1"
+              style={{ letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}
+            >
               Authorized Signature
             </p>
           </div>
         </div>
 
-        {/* Footer (remove date and signature from here, keep as padding/border only) */}
+        {/* Footer */}
         <div className="border-t border-gray-300 flex-1"></div>
       </div>
     </div>
