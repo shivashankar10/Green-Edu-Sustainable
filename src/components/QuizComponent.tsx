@@ -185,7 +185,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
 
   if (showResults) {
     return (
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div className="w-full max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-center">Quiz Results</CardTitle>
@@ -202,59 +202,79 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                 </p>
                 {course && (
                   <>
-                    {/* Certificate display area */}
-                    <div ref={certificateRef} className="my-6">
-                      <SampleCertificate
-                        courseTitle={course.title}
-                        lessons={course.lessons || 0}
-                        hours={parseInt(course.duration?.split(' ')[0] || '0')}
-                        score={score}
-                        completed={true}
-                        certificateCode={certificateCode}
-                      />
+                    {/* Certificate display area - A4 format */}
+                    <div className="my-6 bg-gray-50 p-4 rounded-lg overflow-auto">
+                      <div 
+                        ref={certificateRef} 
+                        className="mx-auto bg-white shadow-lg"
+                        style={{
+                          width: '794px', // A4 width at 96 DPI for screen display
+                          height: '1123px', // A4 height at 96 DPI for screen display
+                          transform: 'scale(0.7)',
+                          transformOrigin: 'top center',
+                          marginBottom: '-200px' // Adjust for scale
+                        }}
+                      >
+                        <SampleCertificate
+                          courseTitle={course.title}
+                          lessons={course.lessons || 0}
+                          hours={parseInt(course.duration?.split(' ')[0] || '0')}
+                          score={score}
+                          completed={true}
+                          certificateCode={certificateCode}
+                        />
+                      </div>
                     </div>
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white mt-2"
                       onClick={async () => {
                         if (!certificateRef.current) return;
 
-                        // Desired A4 pixel dimensions at 300dpi: 2480 x 3508
-                        const a4WidthPx = 2480;
-                        const a4HeightPx = 3508;
+                        try {
+                          // Create a clone of the certificate for high-res export
+                          const clonedElement = certificateRef.current.cloneNode(true) as HTMLElement;
+                          
+                          // Set A4 dimensions for high-res export (300 DPI)
+                          clonedElement.style.width = '2480px';
+                          clonedElement.style.height = '3508px';
+                          clonedElement.style.transform = 'none';
+                          clonedElement.style.position = 'absolute';
+                          clonedElement.style.left = '-9999px';
+                          clonedElement.style.top = '0';
+                          
+                          // Temporarily add to DOM
+                          document.body.appendChild(clonedElement);
+                          
+                          // Wait for rendering
+                          await new Promise(resolve => setTimeout(resolve, 100));
 
-                        // Save original style to restore after export
-                        const originalStyle = certificateRef.current.getAttribute("style");
+                          // Render with html2canvas
+                          const canvas = await html2canvas(clonedElement, {
+                            backgroundColor: '#fff',
+                            width: 2480,
+                            height: 3508,
+                            scale: 1,
+                            useCORS: true,
+                            allowTaint: true
+                          });
 
-                        // Temporarily set the style for export to exact A4 px size
-                        certificateRef.current.setAttribute(
-                          "style",
-                          "width: 2480px; height: 3508px; padding:40px; font-size:48px;"
-                        );
+                          // Remove cloned element
+                          document.body.removeChild(clonedElement);
 
-                        // Wait a frame for style to apply
-                        await new Promise(r => setTimeout(r, 60));
-
-                        // Render with html2canvas using proper dimensions & scaling
-                        const canvas = await (window as any).html2canvas(certificateRef.current, {
-                          backgroundColor: '#fff',
-                          width: a4WidthPx,
-                          height: a4HeightPx,
-                          scale: 1, // Avoid pixel doubling, as A4 is already big
-                          useCORS: true
-                        });
-
-                        // Restore original style
-                        if (originalStyle) {
-                          certificateRef.current.setAttribute("style", originalStyle);
-                        } else {
-                          certificateRef.current.removeAttribute("style");
+                          // Download
+                          const url = canvas.toDataURL("image/png", 1.0);
+                          const link = document.createElement("a");
+                          link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4.png`;
+                          link.href = url;
+                          link.click();
+                        } catch (error) {
+                          console.error('Error generating certificate:', error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to download certificate. Please try again.",
+                            variant: "destructive"
+                          });
                         }
-
-                        const url = canvas.toDataURL("image/png");
-                        const link = document.createElement("a");
-                        link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4.png`;
-                        link.href = url;
-                        link.click();
                       }}
                     >
                       Download Certificate (A4 PNG)
