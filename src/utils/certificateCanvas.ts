@@ -1,4 +1,3 @@
-
 export const generateCertificateCanvas = (
   certificateData: any,
   courseTitle: string,
@@ -15,9 +14,43 @@ export const generateCertificateCanvas = (
   canvas.width = 800;
   canvas.height = 600;
 
-  // Fill background
+  // Draw very light green watermark across background
+  ctx.save();
+  ctx.globalAlpha = 0.08; // Very low opacity for background
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(-Math.PI / 6); // Rotate texts by -30º for diagonal effect
+  ctx.font = "bold 56px Arial";
+  ctx.fillStyle = "#54f294"; // Light green
+  ctx.textAlign = "center";
+
+  // Repeat watermark
+  const text = "GreenEdu Platform";
+  for (let y = -600; y < 600; y += 120) {
+    for (let x = -800; x < 800; x += 400) {
+      ctx.fillText(text, x, y);
+    }
+  }
+  ctx.restore();
+
+  // Fill background (over watermark, but use opaque white to ensure readability)
   ctx.fillStyle = '#ffffff';
+  ctx.globalAlpha = 1;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Redraw watermark (because fully opaque white would otherwise cover it)
+  ctx.save();
+  ctx.globalAlpha = 0.10; // Slightly higher alpha for watermark above white
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(-Math.PI / 6);
+  ctx.font = "bold 56px Arial";
+  ctx.fillStyle = "#54f294";
+  ctx.textAlign = "center";
+  for (let y = -600; y < 600; y += 120) {
+    for (let x = -800; x < 800; x += 400) {
+      ctx.fillText(text, x, y);
+    }
+  }
+  ctx.restore();
 
   // Add border
   ctx.strokeStyle = '#16a34a';
