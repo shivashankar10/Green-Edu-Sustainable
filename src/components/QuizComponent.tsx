@@ -202,6 +202,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                 </p>
                 {course && (
                   <>
+                    {/* Certificate display area */}
                     <div ref={certificateRef} className="my-6">
                       <SampleCertificate
                         courseTitle={course.title}
@@ -216,18 +217,47 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                       className="bg-green-600 hover:bg-green-700 text-white mt-2"
                       onClick={async () => {
                         if (!certificateRef.current) return;
-                        const canvas = await html2canvas(certificateRef.current, {
+
+                        // Desired A4 pixel dimensions at 300dpi: 2480 x 3508
+                        const a4WidthPx = 2480;
+                        const a4HeightPx = 3508;
+
+                        // Save original style to restore after export
+                        const originalStyle = certificateRef.current.getAttribute("style");
+
+                        // Temporarily set the style for export to exact A4 px size
+                        certificateRef.current.setAttribute(
+                          "style",
+                          "width: 2480px; height: 3508px; padding:40px; font-size:48px;"
+                        );
+
+                        // Wait a frame for style to apply
+                        await new Promise(r => setTimeout(r, 60));
+
+                        // Render with html2canvas using proper dimensions & scaling
+                        const canvas = await (window as any).html2canvas(certificateRef.current, {
                           backgroundColor: '#fff',
-                          scale: 2,
+                          width: a4WidthPx,
+                          height: a4HeightPx,
+                          scale: 1, // Avoid pixel doubling, as A4 is already big
+                          useCORS: true
                         });
+
+                        // Restore original style
+                        if (originalStyle) {
+                          certificateRef.current.setAttribute("style", originalStyle);
+                        } else {
+                          certificateRef.current.removeAttribute("style");
+                        }
+
                         const url = canvas.toDataURL("image/png");
                         const link = document.createElement("a");
-                        link.download = `Certificate-${course.title.replace(/\s/g, "_")}.png`;
+                        link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4.png`;
                         link.href = url;
                         link.click();
                       }}
                     >
-                      Download Certificate
+                      Download Certificate (A4 PNG)
                     </Button>
                   </>
                 )}
