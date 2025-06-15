@@ -155,9 +155,9 @@ const SampleCertificate = ({
             <img
               src={SIGNATURE_URL}
               alt="Authorized Signature"
-              className="h-16 w-auto object-contain mb-1"
+              className="h-24 w-auto object-contain mb-1" {/* <- larger (was h-16, now h-24) */}
               style={{
-                maxWidth: 140,
+                maxWidth: 180, {/* <- increase from 140 to 180 */}
                 filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
               }}
               draggable={false}
