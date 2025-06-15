@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 interface SampleCertificateProps {
   courseTitle: string;
@@ -20,9 +21,10 @@ const SampleCertificate = ({
   certificateCode 
 }: SampleCertificateProps) => {
   const { user } = useAuth();
+  const { profile } = useProfile();
 
-  // Get user name from auth or use default
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
+  // Get user name from profile first, then fallback to auth metadata or email
+  const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
 
   if (!completed || score < 80) {
     return null;

@@ -26,7 +26,7 @@ const HeroSection = () => {
           <div className="animate-fade-in">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight hero-text-shadow">
               <span className="text-green-700 hero-text-shadow">Learn </span>
-              <span className="gradient-text hero-text-shadow">Sustainability</span>
+              <span className="text-green-700 hero-text-shadow">Sustainability</span>
               <br />
               <span className="text-green-700 hero-text-shadow">Shape the Future</span>
             </h1>
