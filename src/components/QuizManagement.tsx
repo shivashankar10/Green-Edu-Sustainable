@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -74,7 +73,17 @@ const QuizManagement = () => {
         .order('created_at');
 
       if (error) throw error;
-      setQuestions(data || []);
+      
+      // Convert the data to match our interface
+      const typedQuestions: QuizQuestion[] = (data || []).map(item => ({
+        id: item.id,
+        course_id: item.course_id,
+        question: item.question,
+        options: Array.isArray(item.options) ? item.options as string[] : [],
+        correct_answer: item.correct_answer
+      }));
+      
+      setQuestions(typedQuestions);
     } catch (error) {
       console.error('Error fetching questions:', error);
       toast({
