@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -104,7 +103,7 @@ const CompletedCoursesSection = () => {
                 <SampleCertificate
                   courseTitle={course.title}
                   lessons={Number(course.lessons)}
-                  hours={course.duration}
+                  hours={Number(course.duration)}
                   score={course.score}
                   completed={course.completed}
                   certificateCode={course.certificate_code}
