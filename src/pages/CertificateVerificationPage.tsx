@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { CheckCircle, XCircle, Calendar, Trophy, BookOpen, Clock } from 'lucide-
 import { useCertificateVerification } from '@/hooks/useCertificateVerification';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'react-toastify';
 
 const CertificateVerificationPage = () => {
   const [searchParams] = useSearchParams();
@@ -25,9 +25,25 @@ const CertificateVerificationPage = () => {
     }
   }, [searchParams]);
 
+  // Certificate code validation: CERT-123... format, or at least 16 chars, alphanum & dashes only
+  function isValidCertCode(code: string) {
+    return /^CERT-\d{6,}-[A-Z0-9]{5,}$/.test(code.trim());
+  }
+
   const handleVerification = async (code?: string) => {
     const codeToVerify = code || certificateCode;
     if (!codeToVerify.trim()) return;
+
+    if (!isValidCertCode(codeToVerify)) {
+      setIsVerified(false);
+      setVerificationResult(null);
+      toast({
+        title: "Invalid Certificate Code",
+        description: "Please check the code format and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const result = await verifyCertificate(codeToVerify);
     setVerificationResult(result);

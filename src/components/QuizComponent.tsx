@@ -110,11 +110,38 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
     setTimeLeft(15);
   };
 
+  // Defensive: valid answer check for each question
   const handleAnswerSelect = (answerIndex: number) => {
+    if (
+      !questions[currentQuestionIndex] ||
+      answerIndex < 0 ||
+      answerIndex >= questions[currentQuestionIndex].options.length
+    ) {
+      console.warn("Attempted to select out-of-bounds answer", { answerIndex, question: questions[currentQuestionIndex]?.question });
+      toast({
+        title: "Invalid Answer",
+        description: "Selected answer is not valid for this question.",
+        variant: "destructive"
+      });
+      return;
+    }
     setSelectedAnswer(answerIndex);
   };
 
   const handleNextQuestion = () => {
+    // Defensive: don't allow advancing if answer is invalid
+    if (
+      selectedAnswer !== null &&
+      (selectedAnswer < 0 || selectedAnswer >= questions[currentQuestionIndex]?.options.length)
+    ) {
+      toast({
+        title: "Invalid Response",
+        description: "Please select a valid option.",
+        variant: "destructive"
+      });
+      setSelectedAnswer(null);
+      return;
+    }
     const newAnswers = [...userAnswers, selectedAnswer ?? -1];
     setUserAnswers(newAnswers);
 

@@ -20,19 +20,53 @@ const ContactPage = () => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
+  const [lastSent, setLastSent] = useState<number>(0);
+
+  // Utility: simple email format
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // Utility: name length check
+  const validateName = (name: string) =>
+    !!name && name.trim().length > 1 && /^[a-zA-Z\s\.\-']+$/.test(name);
+
+  // Simple message check (non-empty, not just whitespace)
+  const validateMessage = (msg: string) =>
+    !!msg && msg.trim().length > 10 && !/(https?:\/\/|<script|<\/script)/i.test(msg);
+
+  // Rate limit: Prevent repeated submissions < 7 seconds apart for this session
+  const canSend = () => !loading && Date.now() - lastSent > 7000;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Input validation
+    if (!validateName(formData.name)) {
+      toast({ title: "Invalid Name", description: "Name must be at least 2 letters and contain only valid characters.", variant: "destructive" });
+      return;
+    }
+    if (!validateEmail(formData.email)) {
+      toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    if (!validateMessage(formData.message)) {
+      toast({ title: "Invalid Message", description: "Your message must be at least 10 characters and not contain links or code.", variant: "destructive" });
+      return;
+    }
+    if (!canSend()) {
+      toast({ title: "Too Many Requests", description: "Please wait a few seconds before submitting again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
       const { error } = await supabase
         .from('contact_messages')
         .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message
+          name: formData.name.trim().replace(/\s+/, ' '),
+          email: formData.email.trim(),
+          subject: (formData.subject ?? '').trim().slice(0, 100),
+          message: formData.message.trim()
         });
 
       if (error) throw error;
@@ -43,6 +77,7 @@ const ContactPage = () => {
       });
 
       setFormData({ name: '', email: '', subject: '', message: '' });
+      setLastSent(Date.now());
     } catch (error) {
       console.error('Error sending message:', error);
       toast({

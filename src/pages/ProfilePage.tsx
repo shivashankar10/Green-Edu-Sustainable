@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -23,6 +23,11 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  // Utility: Simple validators
+  const isValidName = (name: string) => !!name && name.trim().length >= 2 && /^[a-zA-Z\s\.\-']+$/.test(name);
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPhone = (phone: string) => phone.trim() === "" || /^[0-9\-\+\(\)\s]{8,17}$/.test(phone);
 
   // Update form when profile loaded
   React.useEffect(() => {
@@ -68,12 +73,27 @@ const ProfilePage = () => {
     e.preventDefault();
     setSaving(true);
     setSuccess(false);
+
+    // Validate input
+    if (!isValidName(form.full_name)) {
+      setSaving(false);
+      return toast({ title: "Invalid Name", description: "Please enter a valid full name (letters only).", variant: "destructive" });
+    }
+    if (!isValidEmail(form.email)) {
+      setSaving(false);
+      return toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
+    }
+    if (!isValidPhone(form.phone_number)) {
+      setSaving(false);
+      return toast({ title: "Invalid Phone Number", description: "Enter a valid phone (digits, spaces, -, (), +) or leave blank.", variant: "destructive" });
+    }
+
     const { error } = await saveProfile({
-      full_name: form.full_name,
-      email: form.email,
-      phone_number: form.phone_number,
-      college_name: form.college_name,
-      college_mailid: form.college_mailid,
+      full_name: form.full_name.trim(),
+      email: form.email.trim(),
+      phone_number: form.phone_number.trim(),
+      college_name: form.college_name.trim(),
+      college_mailid: form.college_mailid?.trim() ?? "",
       gender: form.gender,
     });
     setSaving(false);
