@@ -196,16 +196,16 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                 </p>
                 {course && (
                   <>
-                    {/* Certificate display area - Real A4 size */}
+                    {/* Certificate display area - Real A4 Landscape size */}
                     <div className="my-6 bg-gray-50 p-8 rounded-lg overflow-auto">
                       <div 
                         ref={certificateRef} 
                         className="mx-auto bg-white shadow-lg"
                         style={{
-                          width: '210mm', // A4 width
-                          height: '297mm', // A4 height
-                          minWidth: '210mm',
-                          minHeight: '297mm',
+                          width: '297mm', // A4 landscape width
+                          height: '210mm', // A4 landscape height
+                          minWidth: '297mm',
+                          minHeight: '210mm',
                         }}
                       >
                         <SampleCertificate
@@ -224,7 +224,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                         if (!certificateRef.current) return;
 
                         try {
-                          // Create canvas with high DPI for crisp output
+                          // Create canvas with high DPI for crisp output - A4 landscape
                           const canvas = await html2canvas(certificateRef.current, {
                             backgroundColor: '#fff',
                             scale: 3, // High resolution for print quality
@@ -237,7 +237,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                           // Download as PNG
                           const url = canvas.toDataURL("image/png", 1.0);
                           const link = document.createElement("a");
-                          link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4.png`;
+                          link.download = `Certificate-${course.title.replace(/\s/g, "_")}-A4-Landscape.png`;
                           link.href = url;
                           document.body.appendChild(link);
                           link.click();
@@ -257,7 +257,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                         }
                       }}
                     >
-                      Download Certificate (A4 PNG)
+                      Download Certificate (A4 Landscape PNG)
                     </Button>
                   </>
                 )}

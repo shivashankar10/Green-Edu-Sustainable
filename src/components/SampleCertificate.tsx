@@ -43,7 +43,15 @@ const SampleCertificate = ({
     `${window.location.origin}/verify-certificate`;
 
   return (
-    <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
+    <div 
+      className="relative bg-white border-2 border-green-600 p-8 overflow-hidden"
+      style={{
+        width: '297mm', // A4 landscape width
+        height: '210mm', // A4 landscape height
+        minWidth: '297mm',
+        minHeight: '210mm',
+      }}
+    >
       {/* Watermark grid background: "greenedu" text in every cell, brighter and more visible */}
       <div
         className="pointer-events-none select-none absolute inset-0"
@@ -63,13 +71,13 @@ const SampleCertificate = ({
             position: 'absolute',
             inset: 0,
             display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gridTemplateRows: 'repeat(7, 1fr)',
+            gridTemplateColumns: 'repeat(8, 1fr)',
+            gridTemplateRows: 'repeat(5, 1fr)',
             pointerEvents: 'none',
             userSelect: 'none',
           }}
         >
-          {[...Array(7 * 6)].map((_, idx) => (
+          {[...Array(8 * 5)].map((_, idx) => (
             <div
               key={idx}
               style={{
@@ -103,55 +111,66 @@ const SampleCertificate = ({
         </div>
       </div>
 
-      <div className="relative z-10 text-center space-y-6">
+      <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <div className="border-b-2 border-green-600 pb-4">
-          <h1 className="text-4xl font-bold text-green-700 mb-2">Certificate of Completion</h1>
-          <p className="text-lg text-gray-600">Sustainable Learning Platform</p>
+        <div className="border-b-2 border-green-600 pb-4 text-center">
+          <h1 className="text-5xl font-bold text-green-700 mb-2">Certificate of Completion</h1>
+          <p className="text-xl text-gray-600">Sustainable Learning Platform</p>
         </div>
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          <p className="text-lg text-gray-700">This is to certify that</p>
-          <div className="border-b-2 border-gray-300 pb-2 mx-auto max-w-md">
-            <h2 className="text-3xl font-bold text-black" data-user-name>{userName}</h2>
-          </div>
-          <p className="text-lg text-gray-700">has successfully completed the course</p>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <h3 className="text-2xl font-bold text-green-800 mb-2">{courseTitle}</h3>
-            <div className="text-gray-600 space-y-1">
-              <p>Course Duration: {hours} hours</p>
-              <p>Number of Lessons: {lessons}</p>
-              <p>Final Score: {score}%</p>
+        {/* Main Content - Flex layout for landscape */}
+        <div className="flex-1 flex items-center justify-between py-8">
+          {/* Left side - Certificate content */}
+          <div className="flex-1 space-y-6 text-center">
+            <p className="text-xl text-gray-700">This is to certify that</p>
+            <div className="border-b-2 border-gray-300 pb-2 mx-auto max-w-md">
+              <h2 className="text-4xl font-bold text-black" data-user-name>{userName}</h2>
             </div>
+            <p className="text-xl text-gray-700">has successfully completed the course</p>
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200 mx-8">
+              <h3 className="text-3xl font-bold text-green-800 mb-4">{courseTitle}</h3>
+              <div className="text-gray-600 space-y-2 text-lg">
+                <p>Course Duration: {hours} hours</p>
+                <p>Number of Lessons: {lessons}</p>
+                <p>Final Score: {score}%</p>
+              </div>
+            </div>
+            <p className="text-xl text-gray-700 px-8">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
           </div>
-          <p className="text-lg text-gray-700">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
+
+          {/* Right side - QR Code and Certificate ID */}
+          <div className="flex flex-col items-center space-y-6 px-8">
+            {certificateCode && (
+              <>
+                {/* QR Code */}
+                <div className="text-center space-y-2">
+                  <div className="w-32 h-32 border-2 border-gray-400 flex items-center justify-center bg-gray-50">
+                    <QrCode className="w-24 h-24 text-gray-600" />
+                  </div>
+                  <p className="text-sm text-gray-500">Scan to Verify</p>
+                </div>
+                
+                {/* Certificate ID */}
+                <div className="text-center">
+                  <p className="text-sm text-gray-500">Certificate ID</p>
+                  <p className="font-mono text-lg font-semibold text-black bg-gray-100 px-4 py-2 rounded border">
+                    {certificateCode}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Footer with QR Code and Signature */}
-        <div className="flex justify-between items-end pt-8 border-t border-gray-300">
+        {/* Footer */}
+        <div className="flex justify-between items-end pt-6 border-t border-gray-300">
           <div className="text-left">
             <p className="text-sm text-gray-500">Date of Completion</p>
-            <p className="font-semibold">{new Date().toLocaleDateString()}</p>
+            <p className="font-semibold text-lg text-black">{new Date().toLocaleDateString()}</p>
           </div>
 
-          {certificateCode && (
-            <div className="text-center space-y-2">
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 border-2 border-gray-400 flex items-center justify-center bg-gray-50">
-                  <QrCode className="w-12 h-12 text-gray-600" />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Scan to Verify</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Certificate ID</p>
-                <p className="font-mono text-sm">{certificateCode}</p>
-              </div>
-            </div>
-          )}
-
           <div className="text-right flex flex-col items-end">
-            {/* Signature image, increased size, no inline comments */}
+            {/* Signature image */}
             <img
               src={SIGNATURE_URL}
               alt="Authorized Signature"
