@@ -1,7 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, BookOpen, Users, Award } from 'lucide-react';
+import { Play, BookOpen } from 'lucide-react';
 import SampleCertificate from './SampleCertificate';
 
 const HeroSection = () => {
@@ -16,13 +16,18 @@ const HeroSection = () => {
 
   return (
     <section id="home" className="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-blue-50 overflow-hidden">
+      <style>{`
+        .hero-text-shadow {
+          text-shadow: 0 2px 8px rgba(34,197,94,0.15), 0 1px 0 #fff;
+        }
+      `}</style>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Content */}
           <div className="animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight hero-text-shadow">
               Learn{' '}
-              <span className="gradient-text">Sustainability</span>
+              <span className="gradient-text hero-text-shadow">Sustainability</span>
               <br />
               Shape the Future
             </h1>
