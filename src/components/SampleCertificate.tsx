@@ -1,5 +1,5 @@
 
-import { Award, Calendar, CheckCircle, QrCode } from 'lucide-react';
+import { Award, Calendar, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,6 @@ interface SampleCertificateProps {
   score?: number;
   completed?: boolean;
   certificateCode?: string;
-  qrCodeUrl?: string;
 }
 
 // Default course certificate fallback
@@ -31,7 +30,6 @@ const SampleCertificate = ({
   score,
   completed,
   certificateCode,
-  qrCodeUrl,
 }: SampleCertificateProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -97,16 +95,6 @@ const SampleCertificate = ({
           <CheckCircle className="h-5 w-5 mr-2" />
           <span className="text-sm font-medium">Score: {score ?? DEFAULT_COURSE.score}%</span>
         </div>
-
-        {/* QR Code Section */}
-        {qrCodeUrl && (
-          <div className="flex justify-center items-center space-x-4 pt-4">
-            <div className="text-center">
-              <img src={qrCodeUrl} alt="Verification QR Code" className="w-16 h-16 mx-auto mb-1" />
-              <p className="text-xs text-gray-500">Scan to verify</p>
-            </div>
-          </div>
-        )}
 
         {/* Certificate Code */}
         {certificateCode && (
