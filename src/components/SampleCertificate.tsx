@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { QrCode } from 'lucide-react';
+import QRCode from 'qrcode.react';
 
 // Change this to your own logo if available!
 const LOGO_URL = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=256&h=256&fit=crop";
@@ -32,33 +33,36 @@ const SampleCertificate = ({
 
   // Get user name from profile first, then fallback to auth metadata or email
   const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
+  const userId = user?.id || '';
 
   if (!completed || score < 80) {
     return null;
   }
 
   // Generate verification URL for QR code
-  const verificationUrl = certificateCode ?
-    `${window.location.origin}/verify-certificate?code=${certificateCode}` :
-    `${window.location.origin}/verify-certificate`;
+  const verificationUrl = certificateCode
+    ? `${window.location.origin}/verify-certificate?code=${certificateCode}`
+    : `${window.location.origin}/verify-certificate`;
+
+  const completionDate = new Date().toLocaleDateString();
 
   return (
-    <div 
+    <div
       className="relative bg-white border-2 border-green-600 p-8 overflow-hidden"
       style={{
-        width: '297mm', // A4 landscape width
-        height: '210mm', // A4 landscape height
+        width: '297mm',
+        height: '210mm',
         minWidth: '297mm',
         minHeight: '210mm',
       }}
     >
-      {/* Watermark grid background: "greenedu" text in every cell, much lighter and less bright */}
+      {/* Watermark grid background */}
       <div
         className="pointer-events-none select-none absolute inset-0"
         aria-hidden="true"
         style={{
           zIndex: 0,
-          opacity: 1, // full so we control per-span
+          opacity: 1,
           userSelect: "none",
           backgroundImage: `repeating-linear-gradient(120deg, transparent 0 50px, rgba(34,197,94,0.02) 50px 60px), 
             repeating-linear-gradient(-120deg, transparent 0 50px, rgba(34,197,94,0.02) 50px 60px)`,
@@ -95,11 +99,11 @@ const SampleCertificate = ({
                   fontWeight: 800,
                   color: "#22c55e",
                   letterSpacing: "0.075em",
-                  opacity: 0.08, // much lighter - reduced from 0.29 to 0.08
+                  opacity: 0.08,
                   textTransform: "lowercase",
                   whiteSpace: "nowrap",
                   userSelect: "none",
-                  textShadow: "0 1px 2px rgba(255,255,255,0.3)", // much lighter shadow
+                  textShadow: "0 1px 2px rgba(255,255,255,0.3)",
                   pointerEvents: 'none',
                   fontFamily: 'inherit, sans-serif'
                 }}
@@ -118,13 +122,16 @@ const SampleCertificate = ({
           <p className="text-xl text-gray-600">Sustainable Learning Platform</p>
         </div>
 
-        {/* Main Content - Flex layout for landscape */}
+        {/* Main Content */}
         <div className="flex-1 flex items-center justify-between py-8">
           {/* Left side - Certificate content */}
           <div className="flex-1 space-y-6 text-center">
             <p className="text-xl text-gray-700">This is to certify that</p>
             <div className="border-b-2 border-gray-300 pb-2 mx-auto max-w-md">
               <h2 className="text-4xl font-bold text-black" data-user-name>{userName}</h2>
+              <div className="text-xs text-gray-400 mt-1 font-mono">
+                User ID: {userId}
+              </div>
             </div>
             <p className="text-xl text-gray-700">has successfully completed the course</p>
             <div className="bg-green-50 p-6 rounded-lg border border-green-200 mx-8">
@@ -138,23 +145,39 @@ const SampleCertificate = ({
             <p className="text-xl text-gray-700 px-8">with a passing grade, demonstrating knowledge and understanding of sustainable practices.</p>
           </div>
 
-          {/* Right side - QR Code and Certificate ID */}
+          {/* Right side - QR Code, Certificate ID, Completion Info */}
           <div className="flex flex-col items-center space-y-6 px-8">
             {certificateCode && (
               <>
                 {/* QR Code */}
                 <div className="text-center space-y-2">
                   <div className="w-32 h-32 border-2 border-gray-400 flex items-center justify-center bg-gray-50">
-                    <QrCode className="w-24 h-24 text-gray-600" />
+                    <QRCode
+                      value={verificationUrl}
+                      size={110}
+                      level="H"
+                      bgColor="#F9FAFB"
+                      fgColor="#22c55e"
+                      includeMargin={false}
+                    />
                   </div>
                   <p className="text-sm text-gray-500">Scan to Verify</p>
                 </div>
-                
-                {/* Certificate ID */}
-                <div className="text-center">
+
+                {/* Certificate Info (code, completion date, user) */}
+                <div className="text-center space-y-1">
                   <p className="text-sm text-gray-500">Certificate ID</p>
-                  <p className="font-mono text-lg font-semibold text-black bg-gray-100 px-4 py-2 rounded border">
+                  <p className="font-mono text-lg font-semibold text-black bg-gray-100 px-3 py-1 rounded border">
                     {certificateCode}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    User: {userName}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Date: {completionDate}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Course: {courseTitle}
                   </p>
                 </div>
               </>
@@ -166,7 +189,7 @@ const SampleCertificate = ({
         <div className="flex justify-between items-end pt-6 border-t border-gray-300">
           <div className="text-left">
             <p className="text-sm text-gray-500">Date of Completion</p>
-            <p className="font-semibold text-lg text-black">{new Date().toLocaleDateString()}</p>
+            <p className="font-semibold text-lg text-black">{completionDate}</p>
           </div>
 
           <div className="text-right flex flex-col items-end">
@@ -190,3 +213,4 @@ const SampleCertificate = ({
 };
 
 export default SampleCertificate;
+
