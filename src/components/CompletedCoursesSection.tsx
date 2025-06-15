@@ -71,7 +71,7 @@ const CompletedCoursesSection = () => {
       .map((enrollment: any) => ({
         id: enrollment.courses?.id || "",
         title: enrollment.courses?.title || "Untitled",
-        lessons: enrollment.courses?.lessons ?? 0,
+        lessons: Number(enrollment.courses?.lessons ?? 0), // Ensure lessons is a number
         duration: enrollment.courses?.duration ?? "",
         score: enrollment.certificate_verifications?.score ?? 0,
         completed: enrollment.completed,
