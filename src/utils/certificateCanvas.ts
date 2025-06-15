@@ -85,17 +85,10 @@ export const generateCertificateCanvas = (
   ctx.textAlign = 'center';
   ctx.fillText('This is to certify that', canvas.width / 2, 180);
 
-  // User name
+  // User name only
   ctx.font = 'bold 28px Arial';
   ctx.fillStyle = '#16a34a';
   ctx.fillText(userName, canvas.width / 2, 220);
-
-  // User ID
-  if (userId) {
-    ctx.font = 'italic 13px Arial';
-    ctx.fillStyle = '#888888';
-    ctx.fillText(`User ID: ${userId}`, canvas.width / 2, 242);
-  }
 
   // Course completion text and title
   ctx.font = '16px Arial';
@@ -132,19 +125,21 @@ export const generateCertificateCanvas = (
   ctx.fillStyle = '#16a34a';
   ctx.fillText(`Score: ${score}%`, canvas.width / 2, y + 75);
 
-  // Completion time
+  // Completion time string for QR and visual details
   const completionDate = new Date().toLocaleString();
-  ctx.font = '14px Arial';
-  ctx.fillStyle = '#333333';
-  ctx.fillText(`Completed on: ${completionDate}`, canvas.width / 2, y + 105);
 
   // Add true QR code (overwriting placeholder version)
-  // QR will point to unique verification URL: https://yourdomain.com/verify-certificate?code=<certificate_code>
-  //NOTE: You may want to set your custom domain here:
+  // QR will point to unique verification URL: https://yourdomain.com/verify-certificate?code=<certificate_code>&userid=<user_id>
   const baseUrl = window?.location?.origin || "https://greenedu.com";
-  const verificationUrl = certificateData?.certificate_code
-    ? `${baseUrl}/verify-certificate?code=${certificateData.certificate_code}`
-    : `${baseUrl}/verify-certificate`;
+  let verificationUrl: string;
+
+  if (certificateData?.certificate_code) {
+    verificationUrl =
+      `${baseUrl}/verify-certificate?code=${certificateData.certificate_code}${userId ? `&userid=${userId}` : ''}`;
+  } else {
+    verificationUrl =
+      `${baseUrl}/verify-certificate${userId ? `?userid=${userId}` : ''}`;
+  }
 
   // We'll block to allow QR drawing before allowing PNG download
   // We'll run synchronously (not perfect for big PNGs, but fast enough for these certs)

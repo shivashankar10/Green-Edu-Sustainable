@@ -39,10 +39,10 @@ const SampleCertificate = ({
     return null;
   }
 
-  // Generate verification URL for QR code
+  // Generate verification URL for QR code (with userId as a param)
   const verificationUrl = certificateCode
-    ? `${window.location.origin}/verify-certificate?code=${certificateCode}`
-    : `${window.location.origin}/verify-certificate`;
+    ? `${window.location.origin}/verify-certificate?code=${certificateCode}${userId ? `&userid=${userId}` : ''}`
+    : `${window.location.origin}/verify-certificate${userId ? `?userid=${userId}` : ''}`;
 
   const completionDate = new Date().toLocaleDateString();
 
@@ -129,9 +129,10 @@ const SampleCertificate = ({
             <p className="text-xl text-gray-700">This is to certify that</p>
             <div className="border-b-2 border-gray-300 pb-2 mx-auto max-w-md">
               <h2 className="text-4xl font-bold text-black" data-user-name>{userName}</h2>
-              <div className="text-xs text-gray-400 mt-1 font-mono">
+              {/* REMOVED VISIBLE USER ID */}
+              {/* <div className="text-xs text-gray-400 mt-1 font-mono">
                 User ID: {userId}
-              </div>
+              </div> */}
             </div>
             <p className="text-xl text-gray-700">has successfully completed the course</p>
             <div className="bg-green-50 p-6 rounded-lg border border-green-200 mx-8">
