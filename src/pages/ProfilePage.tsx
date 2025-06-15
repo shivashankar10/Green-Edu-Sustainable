@@ -40,8 +40,8 @@ const ProfilePage = () => {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen">
         <div className="bg-white p-8 rounded shadow-md">
-          <h2 className="text-xl font-bold mb-4">Profile</h2>
-          <p>Please log in to view your profile.</p>
+          <h2 className="text-xl font-bold mb-4 text-black">Profile</h2>
+          <p className="text-black">Please log in to view your profile.</p>
           <Button onClick={() => navigate('/auth')} className="mt-4">
             Login
           </Button>
@@ -86,10 +86,10 @@ const ProfilePage = () => {
   return (
     <main className="flex items-center justify-center min-h-screen bg-green-50">
       <form onSubmit={handleSave} className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full space-y-6">
-        <h2 className="text-2xl font-bold text-green-700 mb-4 text-center">Edit Your Profile</h2>
+        <h2 className="text-2xl font-bold text-black mb-4 text-center">Edit Your Profile</h2>
         
         <div className="space-y-2">
-          <Label htmlFor="full_name" className="text-gray-700 font-medium">Full Name</Label>
+          <Label htmlFor="full_name" className="text-black font-medium">Full Name</Label>
           <Input
             id="full_name"
             name="full_name"
@@ -97,12 +97,12 @@ const ProfilePage = () => {
             onChange={handleChange}
             placeholder="Your full name"
             required
-            className="bg-green-50"
+            className="bg-green-50 text-black placeholder:text-gray-500"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+          <Label htmlFor="email" className="text-black font-medium">Email</Label>
           <Input
             id="email"
             name="email"
@@ -111,36 +111,36 @@ const ProfilePage = () => {
             onChange={handleChange}
             placeholder="Your email address"
             required
-            className="bg-green-50"
+            className="bg-green-50 text-black placeholder:text-gray-500"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone_number" className="text-gray-700 font-medium">Phone Number</Label>
+          <Label htmlFor="phone_number" className="text-black font-medium">Phone Number</Label>
           <Input
             id="phone_number"
             name="phone_number"
             value={form.phone_number}
             onChange={handleChange}
             placeholder="Phone number"
-            className="bg-green-50"
+            className="bg-green-50 text-black placeholder:text-gray-500"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="college_name" className="text-gray-700 font-medium">College Name</Label>
+          <Label htmlFor="college_name" className="text-black font-medium">College Name</Label>
           <Input
             id="college_name"
             name="college_name"
             value={form.college_name}
             onChange={handleChange}
             placeholder="College name"
-            className="bg-green-50"
+            className="bg-green-50 text-black placeholder:text-gray-500"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="college_mailid" className="text-gray-700 font-medium">
+          <Label htmlFor="college_mailid" className="text-black font-medium">
             College Mail ID <span className="text-xs text-gray-400">(optional)</span>
           </Label>
           <Input
@@ -150,14 +150,14 @@ const ProfilePage = () => {
             value={form.college_mailid}
             onChange={handleChange}
             placeholder="Your college email"
-            className="bg-green-50"
+            className="bg-green-50 text-black placeholder:text-gray-500"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gender" className="text-gray-700 font-medium">Gender</Label>
+          <Label htmlFor="gender" className="text-black font-medium">Gender</Label>
           <Select value={form.gender} onValueChange={handleGenderChange}>
-            <SelectTrigger className="bg-green-50">
+            <SelectTrigger className="bg-green-50 text-black">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -173,7 +173,7 @@ const ProfilePage = () => {
           {saving ? 'Saving...' : 'Save Profile'}
         </Button>
         
-        {success && <div className="text-green-700 font-medium text-center">Profile updated successfully!</div>}
+        {success && <div className="text-black font-medium text-center">Profile updated successfully!</div>}
       </form>
     </main>
   );
