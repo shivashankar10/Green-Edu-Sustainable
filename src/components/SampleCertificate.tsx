@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -186,8 +185,8 @@ const SampleCertificate = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-between items-end pt-6 border-t border-gray-300">
+        {/* Move Date/Signature section above the footer border */}
+        <div className="flex justify-between items-end pt-6 pb-2">
           <div className="text-left">
             <p className="text-sm text-gray-500">Date of Completion</p>
             <p className="font-semibold text-lg text-black">{completionDate}</p>
@@ -198,20 +197,25 @@ const SampleCertificate = ({
             <img
               src={SIGNATURE_URL}
               alt="Authorized Signature"
-              className="h-24 w-auto object-contain mb-1"
+              className="h-24 w-auto object-contain mb-0"
               style={{
                 maxWidth: 180,
                 filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
               }}
               draggable={false}
             />
-            <p className="text-sm text-gray-600">Authorized Signature</p>
+            {/* Prominent Authorized Signature label */}
+            <p className="text-base font-semibold text-green-900 mt-0" style={{ letterSpacing: "0.02em" }}>
+              Authorized Signature
+            </p>
           </div>
         </div>
+
+        {/* Footer (remove date and signature from here, keep as padding/border only) */}
+        <div className="border-t border-gray-300 flex-1"></div>
       </div>
     </div>
   );
 };
 
 export default SampleCertificate;
-
