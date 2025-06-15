@@ -37,8 +37,33 @@ const SampleCertificate = ({
     `${window.location.origin}/verify-certificate`;
 
   return (
-    <div className="bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto">
-      <div className="text-center space-y-6">
+    <div className="relative bg-white border-2 border-green-600 p-8 max-w-4xl mx-auto overflow-hidden">
+      {/* Watermark background */}
+      <div
+        className="pointer-events-none select-none absolute inset-0 flex items-center justify-center"
+        aria-hidden="true"
+        style={{
+          zIndex: 0,
+          opacity: 0.10,
+          userSelect: "none",
+        }}
+      >
+        <span
+          style={{
+            transform: "rotate(-25deg)",
+            fontSize: "3rem",
+            fontWeight: 900,
+            color: "#22c55e", // Tailwind green-500
+            letterSpacing: "0.15em",
+            whiteSpace: "nowrap",
+            textShadow: "0 2px 12px white"
+          }}
+        >
+          GreenEdu Platform
+        </span>
+      </div>
+
+      <div className="relative z-10 text-center space-y-6">
         {/* Header */}
         <div className="border-b-2 border-green-600 pb-4">
           <h1 className="text-4xl font-bold text-green-700 mb-2">Certificate of Completion</h1>
