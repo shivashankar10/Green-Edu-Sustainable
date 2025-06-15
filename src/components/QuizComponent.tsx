@@ -35,7 +35,7 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
   const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per question
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [course, setCourse] = useState<any>(null);
-  const [certificateCode, setCertificateCode] = useState<string | undefined>(undefined);
+  const [certificateCode] = useState<string | undefined>(undefined); // Always undefined since not in quiz_attempts
   const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -144,27 +144,20 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
     setScore(finalScore);
     setShowResults(true);
 
-    // Save quiz attempt
-    let certCode: string | undefined = undefined;
+    // Save quiz attempt (no certificate_code extraction)
     if (user) {
       try {
-        const { data, error } = await supabase.from('quiz_attempts').insert({
+        await supabase.from('quiz_attempts').insert({
           user_id: user.id,
           course_id: courseId,
           score: finalScore,
           total_questions: questions.length,
           answers: answers
-        }).select();
-
-        // Try to retrieve certificate_code if it exists in returned data
-        if (Array.isArray(data) && data.length > 0 && data[0]?.certificate_code) {
-          certCode = data[0].certificate_code;
-        }
+        });
       } catch (error) {
         console.error('Error saving quiz attempt:', error);
       }
     }
-    setCertificateCode(certCode);
     onComplete(finalScore);
   };
 
@@ -215,10 +208,10 @@ const QuizComponent = ({ courseId, onComplete }: QuizComponentProps) => {
                         hours={parseInt(course.duration?.split(' ')[0] || '0')}
                         score={score}
                         completed={true}
-                        certificateCode={certificateCode}
+                        certificateCode={certificateCode} // always undefined, handled safely
                       />
                     </div>
-                    {/* Download button */}
+                    {/* Download button, always shown for ≥80% */}
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white mt-2"
                       onClick={async () => {
