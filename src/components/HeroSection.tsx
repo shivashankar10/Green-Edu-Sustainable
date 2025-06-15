@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, BookOpen } from 'lucide-react';
@@ -18,7 +17,7 @@ const HeroSection = () => {
     <section id="home" className="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-blue-50 overflow-hidden">
       <style>{`
         .hero-text-shadow {
-          text-shadow: 0 2px 8px rgba(34,197,94,0.15), 0 1px 0 #fff;
+          text-shadow: 0 2px 8px rgba(34,197,94,0.18), 0 1px 0 #fff;
         }
       `}</style>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,10 +25,10 @@ const HeroSection = () => {
           {/* Left Column - Content */}
           <div className="animate-fade-in">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight hero-text-shadow">
-              Learn{' '}
+              <span className="text-green-700 hero-text-shadow">Learn </span>
               <span className="gradient-text hero-text-shadow">Sustainability</span>
               <br />
-              Shape the Future
+              <span className="text-green-700 hero-text-shadow">Shape the Future</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               Empower yourself with knowledge about environmental sustainability through our interactive online learning platform. Join thousands of learners committed to creating a greener tomorrow.
