@@ -81,28 +81,32 @@ export const useCertificateVerification = () => {
     }
     setLoading(true);
     try {
+      // Use the secure public function that doesn't expose user_id
       const { data, error } = await supabase
-        .from('certificate_verifications')
-        .select(`
-          *,
-          courses(title, duration, lessons)
-        `)
-        .eq('certificate_code', certificateCode)
+        .rpc('verify_certificate_public', { cert_code: certificateCode })
         .single();
 
       if (error) throw error;
 
-      // Update verification count
-      await supabase
-        .from('certificate_verifications')
-        .update({ 
-          verified_count: (data.verified_count || 0) + 1,
-          last_verified_at: new Date().toISOString()
-        })
-        .eq('certificate_code', certificateCode);
+      // Update verification count using secure function
+      await supabase.rpc('increment_certificate_verification', { 
+        cert_code: certificateCode 
+      });
 
       setLoading(false);
-      return data;
+      // Transform data to match expected format
+      return {
+        certificate_code: data.certificate_code,
+        score: data.score,
+        issued_at: data.issued_at,
+        full_name: data.full_name,
+        verified_count: data.verified_count,
+        courses: {
+          title: data.course_title,
+          duration: data.course_duration,
+          lessons: data.course_lessons
+        }
+      };
     } catch (error) {
       console.error('Error verifying certificate:', error);
       setLoading(false);
