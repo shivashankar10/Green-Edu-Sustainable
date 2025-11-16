@@ -315,7 +315,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_certificate_verification: {
+        Args: { cert_code: string }
+        Returns: boolean
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      verify_certificate_public: {
+        Args: { cert_code: string }
+        Returns: {
+          certificate_code: string
+          course_duration: string
+          course_lessons: number
+          course_title: string
+          full_name: string
+          issued_at: string
+          score: number
+          verified_count: number
+        }[]
+      }
     }
     Enums: {
       user_role: "admin" | "user"

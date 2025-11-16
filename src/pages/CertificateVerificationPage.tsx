@@ -49,18 +49,9 @@ const CertificateVerificationPage = () => {
     setVerificationResult(result);
     setIsVerified(!!result);
 
+    // No need to fetch user profile anymore - full_name is included in the secure result
     if (result) {
-      // Fetch user profile for the certificate holder only if no full_name attached to cert
-      if (!result.full_name) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', result.user_id)
-          .single();
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
+      setUserProfile(null);
     }
   };
 
