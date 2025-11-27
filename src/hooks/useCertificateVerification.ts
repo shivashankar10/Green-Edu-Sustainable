@@ -82,11 +82,20 @@ export const useCertificateVerification = () => {
     setLoading(true);
     try {
       // Use the secure public function that doesn't expose user_id
+      // RPC returns TABLE (array), so we don't use .single()
       const { data, error } = await supabase
-        .rpc('verify_certificate_public', { cert_code: certificateCode })
-        .single();
+        .rpc('verify_certificate_public', { cert_code: certificateCode });
 
       if (error) throw error;
+
+      // Check if certificate was found
+      if (!data || data.length === 0) {
+        setLoading(false);
+        return null;
+      }
+
+      // Get the first (and should be only) result
+      const certData = data[0];
 
       // Update verification count using secure function
       await supabase.rpc('increment_certificate_verification', { 
@@ -96,15 +105,15 @@ export const useCertificateVerification = () => {
       setLoading(false);
       // Transform data to match expected format
       return {
-        certificate_code: data.certificate_code,
-        score: data.score,
-        issued_at: data.issued_at,
-        full_name: data.full_name,
-        verified_count: data.verified_count,
+        certificate_code: certData.certificate_code,
+        score: certData.score,
+        issued_at: certData.issued_at,
+        full_name: certData.full_name,
+        verified_count: certData.verified_count,
         courses: {
-          title: data.course_title,
-          duration: data.course_duration,
-          lessons: data.course_lessons
+          title: certData.course_title,
+          duration: certData.course_duration,
+          lessons: certData.course_lessons
         }
       };
     } catch (error) {
