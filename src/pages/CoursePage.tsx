@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Play, Clock, Users, Award, Star, CheckCircle, Video, HelpCircle, ArrowLeft } from 'lucide-react';
+import { Play, Clock, Users, Award, Star, CheckCircle, Video, HelpCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import QuizComponent from '@/components/QuizComponent';
@@ -51,6 +51,8 @@ const CoursePage = () => {
         setVideoUrl(urlData.publicUrl);
       } else if (data.video_url) {
         setVideoUrl(data.video_url);
+      } else {
+        setVideoUrl('');
       }
     } catch (error) {
       console.error('Error fetching course:', error);
@@ -246,19 +248,50 @@ const CoursePage = () => {
                             Enrolled
                           </div>
                           
-                          {/* Video Player */}
+                          {/* Video Player or Link */}
                           {videoUrl && (
                             <div className="mb-6">
                               <h3 className="text-lg font-semibold mb-4">Course Video</h3>
-                              <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                                <video 
-                                  controls 
-                                  className="w-full h-full"
-                                  src={videoUrl}
+                              {/* Check if it's a YouTube URL */}
+                              {videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? (
+                                <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                                  <iframe
+                                    className="w-full h-full"
+                                    src={videoUrl.includes('watch?v=') 
+                                      ? videoUrl.replace('watch?v=', 'embed/')
+                                      : videoUrl.includes('youtu.be/')
+                                        ? `https://www.youtube.com/embed/${videoUrl.split('youtu.be/')[1]?.split('?')[0]}`
+                                        : videoUrl
+                                    }
+                                    title="Course Video"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              ) : course.video_file_path ? (
+                                /* Local video file */
+                                <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                                  <video 
+                                    controls 
+                                    className="w-full h-full"
+                                    src={videoUrl}
+                                  >
+                                    Your browser does not support the video tag.
+                                  </video>
+                                </div>
+                              ) : (
+                                /* External link - show as clickable link */
+                                <a 
+                                  href={videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
                                 >
-                                  Your browser does not support the video tag.
-                                </video>
-                              </div>
+                                  <ExternalLink className="h-5 w-5" />
+                                  <span className="font-medium">Open Video Link</span>
+                                  <span className="text-sm text-green-600 truncate max-w-xs">{videoUrl}</span>
+                                </a>
+                              )}
                             </div>
                           )}
 
