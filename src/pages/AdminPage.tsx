@@ -399,29 +399,62 @@ const AdminPage = () => {
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="video_file">Video File</Label>
+                        <Label htmlFor="video_file">Video File (Upload directly)</Label>
                         <Input id="video_file" type="file" accept="video/*" onChange={async e => {
                           const file = e.target.files?.[0];
                           if (file) {
                             const filePath = await handleVideoUpload(file);
                             if (filePath) {
-                              setCourseForm({...courseForm, video_file_path: filePath});
+                              setCourseForm({...courseForm, video_file_path: filePath, video_url: ''});
                             }
                           }
                         }} disabled={uploadingVideo} />
                         {uploadingVideo && <p className="text-sm text-gray-500 mt-1">Uploading video...</p>}
                         {courseForm.video_file_path && (
-                          <div className="flex items-center mt-2 text-sm text-green-600">
-                            <Video className="h-4 w-4 mr-1" />
-                            Video uploaded successfully
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center text-sm text-green-600">
+                              <Video className="h-4 w-4 mr-1" />
+                              Video file: {courseForm.video_file_path}
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => setCourseForm({...courseForm, video_file_path: ''})}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
                           </div>
                         )}
                       </div>
                       <div>
-                        <Label htmlFor="video_url">Or Video URL (Optional)</Label>
+                        <Label htmlFor="video_url">Or Video URL (YouTube, external link)</Label>
                         <Input id="video_url" value={courseForm.video_url}
-                          onChange={e => setCourseForm({...courseForm, video_url: e.target.value})}
+                          onChange={e => setCourseForm({...courseForm, video_url: e.target.value, video_file_path: ''})}
                           placeholder="https://youtube.com/watch?v=..." />
+                        <p className="text-xs text-gray-500 mt-1">
+                          YouTube links will embed. Other links will show as clickable buttons.
+                        </p>
+                        {courseForm.video_url && (
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center text-sm text-blue-600">
+                              <Video className="h-4 w-4 mr-1" />
+                              URL: {courseForm.video_url.substring(0, 50)}...
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => setCourseForm({...courseForm, video_url: ''})}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center space-x-2">
                         <input type="checkbox" id="is_featured"
