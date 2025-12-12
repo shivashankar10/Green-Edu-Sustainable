@@ -30,22 +30,22 @@ const AboutPage = () => {
 
   const team = [
     {
-      name: "Dr. Sarah Johnson",
+      name: "Tagore",
       role: "Founder & CEO",
       description: "Environmental scientist with 15+ years of experience in sustainable development and education."
     },
     {
-      name: "Michael Chen",
+      name: "Supriya",
       role: "Chief Technology Officer",
       description: "Tech innovator passionate about using technology to solve environmental challenges."
     },
     {
-      name: "Prof. Emily Rodriguez",
+      name: "Junaid",
       role: "Head of Curriculum",
       description: "Educational expert specializing in online learning and environmental sciences."
     },
     {
-      name: "David Thompson",
+      name: "Shivashankar",
       role: "Sustainability Advisor",
       description: "Former UN advisor with expertise in climate policy and sustainable business practices."
     }
