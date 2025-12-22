@@ -28,26 +28,32 @@ const AboutPage = () => {
     }
   ];
 
+  const guide = {
+    name: "Dr. P. Pani Rama Prasad",
+    role: "Professor (Guide)",
+    description: "Guiding and mentoring students in environmental education and sustainable development projects."
+  };
+
   const team = [
     {
       name: "Tagore",
-      role: "Founder & CEO",
-      description: "Environmental scientist with 15+ years of experience in sustainable development and education."
+      role: "Student",
+      description: "Passionate about environmental sustainability and web development."
     },
     {
       name: "Supriya",
-      role: "Chief Technology Officer",
-      description: "Tech innovator passionate about using technology to solve environmental challenges."
+      role: "Student",
+      description: "Focused on creating impactful solutions for environmental challenges."
     },
     {
       name: "Junaid",
-      role: "Head of Curriculum",
-      description: "Educational expert specializing in online learning and environmental sciences."
+      role: "Student",
+      description: "Dedicated to learning and implementing sustainable technologies."
     },
     {
       name: "Shivashankar",
-      role: "Sustainability Advisor",
-      description: "Former UN advisor with expertise in climate policy and sustainable business practices."
+      role: "Student",
+      description: "Committed to promoting environmental awareness through education."
     }
   ];
 
@@ -165,9 +171,41 @@ const AboutPage = () => {
                 Meet Our <span className="gradient-text">Team</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Our diverse team of experts is passionate about sustainability and committed to 
-                delivering world-class educational experiences.
+                Our project team working under the guidance of our professor to create 
+                impactful environmental education solutions.
               </p>
+            </div>
+
+            {/* Guide/Professor Section */}
+            <div className="flex justify-center mb-12">
+              <Card className="text-center hover:shadow-lg transition-shadow duration-300 max-w-sm">
+                <CardHeader>
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span className="text-white text-2xl font-bold">
+                      {guide.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl">{guide.name}</CardTitle>
+                  <CardDescription className="text-blue-600 font-medium text-lg">
+                    {guide.role}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-gray-600">
+                    {guide.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Connecting Line */}
+            <div className="flex justify-center mb-8">
+              <div className="w-0.5 h-8 bg-gradient-to-b from-blue-500 to-green-500"></div>
+            </div>
+
+            {/* Students Section */}
+            <div className="text-center mb-6">
+              <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Students</span>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
