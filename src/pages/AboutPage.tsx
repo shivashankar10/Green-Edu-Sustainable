@@ -74,15 +74,15 @@ const AboutPage = () => {
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">15,000+</div>
-                  <div className="text-sm text-gray-600">Students Worldwide</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">50+</div>
+                  <div className="text-sm text-gray-600">Students collegewide</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">5+</div>
                   <div className="text-sm text-gray-600">Video Lessons</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">50+</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">5+</div>
                   <div className="text-sm text-gray-600">Expert Instructors</div>
                 </div>
                 <div className="text-center">
