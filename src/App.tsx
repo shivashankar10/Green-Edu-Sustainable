@@ -15,6 +15,7 @@ import ContactPage from "@/pages/ContactPage";
 import AdminPage from "@/pages/AdminPage";
 import ProfilePage from './pages/ProfilePage';
 import CertificateVerificationPage from './pages/CertificateVerificationPage';
+import BusinessModelPage from './pages/BusinessModelPage';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/verify-certificate" element={<CertificateVerificationPage />} />
+            <Route path="/business-model" element={<BusinessModelPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
